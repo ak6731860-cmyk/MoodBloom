@@ -5,6 +5,351 @@ shuffled per opened case/session so the correct answer is not always option 1. T
 order is stored in user_data and the callback verifies that exact displayed choice.
 Callback compatibility: mb_mystery|answer|index|display_position
 """
+"""MoodBloom Mystery Engine.
+
+Harder clue-driven mysteries with masked answer buttons.
+"""
+
+import random
+
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+
+
+MYSTERIES_PER_PAGE = 8
+
+
+def mask_answer_text(text):
+    clean = str(text).strip()
+    if not clean:
+        return "••••••"
+    if len(clean) <= 12:
+        return clean[:1] + "..."
+    if len(clean) <= 18:
+        return clean[: max(2, min(8, len(clean) // 2))] + "..."
+    return clean[:18] + "..."
+
+
+def build_mystery_choices(answers):
+    choices = []
+    for entry in answers:
+        if isinstance(entry, dict):
+            label = entry.get("label")
+            correct = entry.get("correct", False)
+        else:
+            label, correct = entry
+        choices.append({
+            "full": label,
+            "display": mask_answer_text(label),
+            "correct": bool(correct),
+        })
+    return choices
+
+
+MYSTERIES = [
+    {
+        "title": "Band Darwaze Ki Chabi",
+        "clues": [
+            "Room andar se locked tha.",
+            "Window par baarish ke drops the, lekin floor dry tha.",
+            "Table ke neeche ek fresh scratch mila."
+        ],
+        "answers": [
+            ("🪟 Chabi window se bahar pheki gayi", False),
+            ("👤 Koi stranger window se andar aaya", False),
+            ("🗝️ Chabi floorboard ke gap mein chhupayi gayi thi", True),
+        ],
+    },
+    {
+        "title": "Midnight Bell",
+        "clues": [
+            "Bell exactly 12 baje baji.",
+            "Rope par dust untouched thi.",
+            "Side door ke paas muddy mark tha."
+        ],
+        "answers": [
+            ("🐦 Kisi bird ne bell baja di", False),
+            ("🔔 Bell mechanism ko side passage se activate kiya gaya", True),
+            ("🌬️ Hawa ne rope kheench di", False),
+        ],
+    },
+    {
+        "title": "Gayab Diary",
+        "clues": [
+            "Diary desk par last seen hui thi.",
+            "Desk par ink ka fresh dot tha.",
+            "Bookshelf ka ek book ulta rakha tha."
+        ],
+        "answers": [
+            ("📖 Diary ulte book ke peeche chhupayi gayi", True),
+            ("🪟 Diary window se udd gayi", False),
+            ("🧹 Cleaner ne use dustbin mein daal diya", False),
+        ],
+    },
+    {
+        "title": "Chori Hui Painting",
+        "clues": [
+            "Gallery ka alarm on tha.",
+            "Frame par fingerprints nahi the.",
+            "Back wall par ek halka white mark tha."
+        ],
+        "answers": [
+            ("🚪 Thief main door se bhaaga", False),
+            ("🧽 Painting ko cleaning cloth ke saath le gaye", False),
+            ("🎨 Painting ko frame ke saath hidden panel se nikala gaya", True),
+        ],
+    },
+    {
+        "title": "Silent Phone",
+        "clues": [
+            "Phone ring hua par screen black thi.",
+            "Battery 80% thi.",
+            "Last call 2 minutes pehle hua tha."
+        ],
+        "answers": [
+            ("📡 Phone tower se disconnected tha", False),
+            ("📱 Phone silent mode par tha, call vibration se notice hua", True),
+            ("🔋 Battery fake reading de rahi thi", False),
+        ],
+    },
+    {
+        "title": "Cafe Ka Extra Cup",
+        "clues": [
+            "Cafe mein teen log aaye.",
+            "Bill mein chaar coffees likhi thi.",
+            "Fourth cup untouched tha."
+        ],
+        "answers": [
+            ("☕ Chautha cup pehle se order hua tha, kisi ka wait ho raha tha", True),
+            ("👻 Cafe mein invisible guest tha", False),
+            ("🧾 Cashier ne bill galat banaya", False),
+        ],
+    },
+    {
+        "title": "Garden Footprints",
+        "clues": [
+            "Garden mein wet footprints mile.",
+            "Footprints wrong direction mein the.",
+            "Ek flowerpot ke paas soil pressed tha."
+        ],
+        "answers": [
+            ("🌿 Footprints se sign tha ki kisi ne flowerpot mein secret box chhupa diya", True),
+            ("🧭 Footprints ka pattern hidden path ko point kar raha tha", False),
+            ("🐾 Footprints dog ke the", False),
+            ("🧱 Footprints ne gate ka direction dikhaya", False),
+        ],
+    },
+    {
+        "title": "Basement Lock",
+        "clues": [
+            "Basement door ke pair ek broken keyring mila.",
+            "Akhri kala line sirf ek hi room mein likhi thi.",
+            "Room ka fan 3 rounds piche ki taraf chala tha."
+        ],
+        "answers": [
+            ("🔒 Basement lock ka code 13-07 tha", False),
+            ("🗝️ Keyring ke tag par ek tiny star tha — yahi sign tha ki key hidden inside wall clock panel mein thi", True),
+            ("🧲 Tag par anchor symbol tha", False),
+            ("🧰 Unlocking ke liye hammer use hua", False),
+        ],
+    },
+    {
+        "title": "Mirror Room",
+        "clues": [
+            "Mirror ke front par dust nahi tha.",
+            "Back of mirror par ek thin line of oil thi.",
+            "Room mein ek small handprint wall par tha."
+        ],
+        "answers": [
+            ("🪞 Mirror se peeche hidden passage khul raha tha", True),
+            ("🧍 Mirror ko kisi ne intentionally clean kiya", False),
+            ("🛁 Room ka bathroom hidden tha", False),
+            ("🧹 Cleaner ne mirror ko move kiya", False),
+        ],
+    },
+    {
+        "title": "The Quiet Library",
+        "clues": [
+            "Shelf ka top row thoda unbalanced tha.",
+            "Dust ke ek trail ne wall seam ki taraf point kiya.",
+            "Ek book spine naya tha."
+        ],
+        "answers": [
+            ("📚 Book ke piche hidden journal chhupa tha", True),
+            ("🧹 Cleaner ne shelf ko order diya", False),
+            ("🕵️ Librarian ne book ko badal diya", False),
+            ("📖 Shelf ka top row broken tha", False),
+        ],
+    },
+]
+
+
+def _ordered_answers(context, index):
+    key = f"mb_mystery_order_{index}"
+    order = context.user_data.get(key)
+    if not order or sorted(order) != list(range(len(MYSTERIES[index]["answers"]))):
+        order = list(range(len(MYSTERIES[index]["answers"])))
+        random.shuffle(order)
+        context.user_data[key] = order
+    return order
+
+
+def _keyboard(index, context):
+    mystery = MYSTERIES[index]
+    order = _ordered_answers(context, index)
+    rows = []
+    for display_pos, original_pos in enumerate(order):
+        label, _ = mystery["answers"][original_pos]
+        rows.append([
+            InlineKeyboardButton(mask_answer_text(label), callback_data=f"mb_mystery|answer|{index}|{display_pos}")
+        ])
+    rows.append([
+        InlineKeyboardButton("🔄 New Mystery", callback_data="mb_mystery|new"),
+        InlineKeyboardButton("📚 Browse", callback_data="mb_mystery|menu|0")
+    ])
+    return InlineKeyboardMarkup(rows)
+
+
+def _menu_keyboard(page):
+    total_pages = max(1, (len(MYSTERIES) + MYSTERIES_PER_PAGE - 1) // MYSTERIES_PER_PAGE)
+    page = max(0, min(page, total_pages - 1))
+    start = page * MYSTERIES_PER_PAGE
+    rows = []
+    for index, mystery in list(enumerate(MYSTERIES))[start:start + MYSTERIES_PER_PAGE]:
+        rows.append([InlineKeyboardButton(f"🕵️ {mystery['title']}", callback_data=f"mb_mystery|open|{index}")])
+    nav = []
+    if page > 0:
+        nav.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"mb_mystery|menu|{page - 1}"))
+    if page < total_pages - 1:
+        nav.append(InlineKeyboardButton("Next ➡️", callback_data=f"mb_mystery|menu|{page + 1}"))
+    if nav:
+        rows.append(nav)
+    return InlineKeyboardMarkup(rows), page, total_pages
+
+
+async def _show(update, index, context):
+    mystery = MYSTERIES[index]
+    clue_text = "\n".join(f"• {c}" for c in mystery["clues"])
+    text = (
+        f"🕵️ <b>{mystery['title']}</b>\n\n"
+        f"🔎 <b>Clues</b>\n{clue_text}\n\n"
+        "🧠 Ye clues ek hi story ko explain karni chahiye. "
+        "Har option partial answer dikh raha hai — correct theory hi complete picture banata hai."
+    )
+    markup = _keyboard(index, context)
+    if update.callback_query:
+        await update.callback_query.edit_message_text(text, parse_mode="HTML", reply_markup=markup)
+    elif update.effective_message:
+        await update.effective_message.reply_text(text, parse_mode="HTML", reply_markup=markup)
+
+
+async def _show_menu(update, page=0):
+    markup, page, total_pages = _menu_keyboard(page)
+    text = (
+        "🕵️ <b>MOODBLOOM MYSTERY ROOM</b>\n\n"
+        f"{len(MYSTERIES)} cases • clues first • answers shuffled\n"
+        "Har case mein answer position fixed nahi hai. Pattern pakdo, guess nahi.\n\n"
+        f"Page {page + 1}/{total_pages}"
+    )
+    if update.callback_query:
+        await update.callback_query.edit_message_text(text, parse_mode="HTML", reply_markup=markup)
+    elif update.effective_message:
+        await update.effective_message.reply_text(text, parse_mode="HTML", reply_markup=markup)
+
+
+async def mystery_command(update, context):
+    index = random.randrange(len(MYSTERIES))
+    context.user_data["mb_mystery_index"] = index
+    context.user_data[f"mb_mystery_order_{index}"] = random.sample(range(len(MYSTERIES[index]["answers"])), len(MYSTERIES[index]["answers"]))
+    await _show(update, index, context)
+
+
+async def handle_mystery_callback(update, context):
+    q = update.callback_query
+    if not q:
+        return
+    data = (q.data or "").split("|")
+
+    if len(data) == 2 and data[1] in {"start", "new"}:
+        await q.answer()
+        return await mystery_command(update, context)
+
+    if len(data) == 3 and data[1] == "menu":
+        await q.answer()
+        try:
+            page = int(data[2])
+        except (TypeError, ValueError):
+            page = 0
+        return await _show_menu(update, page)
+
+    if len(data) == 3 and data[1] == "open":
+        await q.answer()
+        try:
+            index = int(data[2])
+        except (TypeError, ValueError):
+            index = 0
+        index = max(0, min(index, len(MYSTERIES) - 1))
+        context.user_data["mb_mystery_index"] = index
+        context.user_data[f"mb_mystery_order_{index}"] = random.sample(range(len(MYSTERIES[index]["answers"])), len(MYSTERIES[index]["answers"]))
+        return await _show(update, index, context)
+
+    if len(data) != 4 or data[0] != "mb_mystery" or data[1] != "answer":
+        await q.answer("Mystery expire ho gaya.", show_alert=True)
+        return
+
+    try:
+        index = int(data[2])
+        display_pos = int(data[3])
+    except (TypeError, ValueError):
+        await q.answer("Mystery expire ho gaya.", show_alert=True)
+        return
+
+    if index < 0 or index >= len(MYSTERIES):
+        await q.answer("Case available nahi hai.", show_alert=True)
+        return
+    if context.user_data.get("mb_mystery_index") != index:
+        await q.answer("Pehle current case kholo.", show_alert=True)
+        return
+
+    order = _ordered_answers(context, index)
+    if display_pos < 0 or display_pos >= len(order):
+        await q.answer("Option expire ho gaya.", show_alert=True)
+        return
+
+    original_pos = order[display_pos]
+    mystery = MYSTERIES[index]
+    chosen_text, correct = mystery["answers"][original_pos]
+    await q.answer("Case solve! 🔎" if correct else "Clue match nahi hua.")
+
+    if correct:
+        text = (
+            f"🕵️ <b>{mystery['title']}</b>\n\n"
+            "✨ <b>Case Solved</b>\n\n"
+            "Tumhari theory diye gaye clues ke saath perfectly consistent hai.\n\n"
+            f"🔎 Full theory: {chosen_text}"
+        )
+    else:
+        correct_text = next(label for label, flag in mystery["answers"] if flag)
+        text = (
+            f"🕵️ <b>{mystery['title']}</b>\n\n"
+            "🔎 Ye theory saare clues ko ek saath explain nahi karti.\n\n"
+            "💡 Re-check karke deeper logic dekho.\n\n"
+            f"🧩 Hidden answer: {mask_answer_text(correct_text)}"
+        )
+
+    await q.edit_message_text(
+        text,
+        parse_mode="HTML",
+        reply_markup=InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("🔄 New Mystery", callback_data="mb_mystery|new"),
+                InlineKeyboardButton("📚 Browse", callback_data="mb_mystery|menu|0"),
+            ]
+        ]),
+    )
+
+
+def register_mystery_handlers(application):
+    return application
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 import random
 
@@ -45,9 +390,11 @@ def _menu_keyboard(page):
 
 async def _show(update,index,context):
     mystery=MYSTERIES[index]
+    clue_text = "\n".join(f"• {c}" for c in mystery["clues"])
     text=(f"🕵️ <b>{mystery['title']}</b>\n\n"
-          "🔎 <b>Clues</b>\n" + "\n".join(f"• {c}" for c in mystery["clues"]) +
-          "\n\n🧠 Jaldi answer mat do. Saare clues ko ek saath fit karne wali theory choose karo.")
+          f"🔎 <b>Clues</b>\n{clue_text}\n\n"
+          "🧠 Ye clues ek hi story ko explain karni chahiye. "
+          "Har option partial answer dikh raha hai — correct theory hi complete picture banata hai.")
     markup=_keyboard(index,context)
     if update.callback_query: await update.callback_query.edit_message_text(text,parse_mode="HTML",reply_markup=markup)
     elif update.effective_message: await update.effective_message.reply_text(text,parse_mode="HTML",reply_markup=markup)
@@ -100,12 +447,18 @@ async def handle_mystery_callback(update,context):
     chosen_text,correct=mystery["answers"][original_pos]
     await q.answer("Case solve! 🔎" if correct else "Clue match nahi hua.")
     if correct:
-        explanation="Tumhari theory diye gaye clues ke saath consistent hai."
-        text=f"🕵️ <b>{mystery['title']}</b>\n\n✨ <b>Case Solved</b>\n\n{explanation}\n\n🔎 Theory: {chosen_text}"
+        explanation="Tumhari theory diye gaye clues ke saath perfectly consistent hai."
+        text=(f"🕵️ <b>{mystery['title']}</b>\n\n"
+              "✨ <b>Case Solved</b>\n\n"
+              f"{explanation}\n\n"
+              f"🔎 Full theory: {chosen_text}")
     else:
-        correct_text=next(label for label,flag in mystery["answers"] if flag)
-        text=f"🕵️ <b>{mystery['title']}</b>\n\n🔎 Ye theory saare clues ko ek saath explain nahi karti.\n\n💡 Re-check karke correct explanation dekho.\n\n🧩 Answer: {correct_text}"
-    await q.edit_message_text(text,parse_mode="HTML",reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 New Mystery",callback_data="mb_mystery|new"),InlineKeyboardButton("📚 Browse",callback_data="mb_mystery|menu|0")]]))
+        correct_text = next(label for label, flag in mystery["answers"] if flag)
+        text=(f"🕵️ <b>{mystery['title']}</b>\n\n"
+              "🔎 Ye theory saare clues ko ek saath explain nahi karti.\n\n"
+              "💡 Re-check karke deeper logic dekho.\n\n"
+              f"🧩 Hidden answer: {mask_answer_text(correct_text)}")
+    await q.edit_message_text(text, parse_mode="HTML", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 New Mystery",callback_data="mb_mystery|new"),InlineKeyboardButton("📚 Browse",callback_data="mb_mystery|menu|0")]]))
 
 def register_mystery_handlers(application):
     return application

@@ -21,9 +21,10 @@
 
 from __future__ import annotations
 
-import html
 import random
 from typing import Any, Dict, Optional
+
+from text_utils import escape_html
 
 from telegram import (
     Update,
@@ -308,7 +309,7 @@ def get_group_state(chat_id: int) -> Dict[str, Any]:
 # ============================================================
 
 def safe(value: Any) -> str:
-    return html.escape(str(value))
+    return escape_html(value)
 
 
 # ============================================================

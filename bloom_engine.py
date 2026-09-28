@@ -25,9 +25,10 @@
 from __future__ import annotations
 
 import datetime
-import html
 import random
 from typing import Any, Dict, List, Optional
+
+from text_utils import escape_html
 
 from telegram import (
     Update,
@@ -416,7 +417,7 @@ def get_user_id(update: Update) -> Optional[int]:
 # ============================================================
 
 def safe(value: Any) -> str:
-    return html.escape(str(value))
+    return escape_html(value)
 
 
 # ============================================================

@@ -324,22 +324,80 @@ async def send_morning_wishes(
 # ============================================================
 
 AFTERNOON_WISHES = [
-    "🌤️ Good afternoon! Thoda pause lo, saans lo, aur din ko gently continue karo. 💛",
-    "☀️ Afternoon check-in: paani pi lo, shoulders relax karo, aur aaj ka din apne pace par chalao. 🌿",
-    "🌼 Good afternoon! Jo ho gaya usse chhodo, jo baaki hai usse calmly handle karo. 💖",
+    "🌤️ Good afternoon, lovely soul! Aaj ka din thoda easy, thoda warm, aur bilkul beautiful ho. 💛",
+    "☀️ Afternoon check-in: paani pi lo, shoulders relax karo, aur apni pace ko soft rakho. 🌿💖",
+    "🌼 Good afternoon! Aaj jo bhi chal raha hai, usse gently handle karo — you are doing enough. 🌷",
+    "💛 Good afternoon, sweetheart! Thoda pause lo, thoda breathe lo, phir din ko lovingly continue karo. 🌸",
+    "🌤️ Aaj ka afternoon soft ho, calm ho, aur aapke liye light. Chhoti si break bhi healing hai. 💫",
+    "☀️ Good afternoon! Aaj apne liye ek minute ka peace rakho, woh bhi progress hai. 🌼",
+    "🌷 Good afternoon! Har chhoti baat ko appreciate karo — wohi baad mein yaad rehti hai. 💖",
+    "🌿 Afternoon glow time! Aaj apni energy ko slow and steady rakho. You’re doing great. 🌸",
+    "💛 Good afternoon, darling! Khud ko gentle rakho, aur din ko too much mat lo. 🌤️",
+    "🌼 Hello afternoon! Aapka din thoda easy, thoda cozy, aur full of tiny wins. ✨",
+    "☀️ Good afternoon! Aaj bas ek calm breath ke saath next step lo. 🌷",
+    "🌸 Good afternoon, lovely one! Apni mehnat ko respect karo, par khud ko bhi stress mat do. 💖",
+    "💫 Good afternoon! Aaj thoda rest, thoda water, thoda smile — aur sab set. 🌿",
+    "🌤️ Afternoon check-in: aapka mood kitna soft hai? Usse cherish karo. 🌼",
+    "🌷 Good afternoon! Aaj jo bhi chhota sa happy moment milta hai, use hold karo. 💛",
+    "☀️ Good afternoon, sweet soul! Your pace is valid, your rest is valid, your peace matters. 🌸",
+    "🌼 Good afternoon! Jo hua use release karo, jo abhi hai usse lovingly handle karo. 💖",
+    "🌤️ Midday glow time! Aaj apne liye ek gentle pause aur ek warm smile rakho. ✨",
+    "💛 Good afternoon, bloom! Aaj ka din aapke liye light and lovely ho. 🌷",
+    "🌸 Good afternoon! Aaj ka focus sirf calm kaam aur happy heart hai. 🌼",
+    "☀️ Good afternoon, lovely! Aaj apni energy ko respect karo, and not overdo it. 💫",
+    "🌷 Afternoon reminder: aapka effort visible hai, ab thoda sukoon bhi allow karo. 🌿",
+    "💖 Good afternoon! Aaj khud ko judge mat karo, bas gently move forward. 🌸",
+    "🌤️ Good afternoon, sweetheart! Aaj ek chhota sa happy break bhi deserves to happen. 💛",
+    "🌼 Hello afternoon! Your calmness is part of your strength. Keep glowing gently. ✨",
+    "☀️ Good afternoon! Aaj sabse pyara kaam ho toh apni smile ka rakhna. 🌷",
+    "🌸 Good afternoon, beautiful soul! Aaj soft pace, warm heart, happy mind. 💖",
+    "💫 Good afternoon! Aaj jo bhi kaam hai, usko thoda grace ke saath karo. 🌼",
+    "🌤️ Good afternoon, lovely one! Pause, sip water, breathe deep, and keep blooming. 💛",
+    "🌷 Afternoon vibe: calm, cozy, and kind to yourself. Keep glowing, darling. 🌸",
+    "💖 Good afternoon! Aaj ke liye soft steps hi enough hain. You are already doing well. 🌼"
 ]
 
 NIGHT_WISHES = [
-    "🌙 Good night! Aaj jitna ho saka, utna enough tha. Ab araam karo. 💜",
-    "✨ Raat ka reminder: kal ek naya din hai. Aaj ke liye bas rest. 🌙",
-    "🌌 Good night! Dil halka rakho, phone side rakho, aur sweet dreams. 💫",
+    "🌙 Good night, sweetheart! Aaj jitna bhi hua, it was enough. Ab soft rest karo. 💜",
+    "✨ Good night, lovely soul! Kal ek naya, beautiful din aayega. Aaj bas relax karo. 🌙",
+    "🌌 Good night! Dil halka rakho, phone side rakho, aur sweet dreams ki taraf chalo. 💫",
+    "💜 Good night, bloom! Aaj ke liye thank you, aur kal ke liye hope. Rest now, darling. 🌙",
+    "🌙 Sleep gently, dream softly, wake up beautifully. Aaj apni body ko peace do. ✨",
+    "🌷 Good night! Aaj ke stress ko thoda side mein rakh lo, aur sukoon ko apna lo. 💖",
+    "🌌 Good night, sweet heart! Tumhari effort ko notice kiya gaya — ab rest ka time hai. 🌙",
+    "💫 Good night! Aaj jo bhi thakawat mehsoos hui, woh bhi part of your humanity hai. Ab rest. 🌸",
+    "🌙 Good night, beautiful! Aaj ke liye sab enough tha. Kal ek nayi, fresh chapter shuru hoga. ✨",
+    "💜 Tension ko rakho side mein, aur sleep ko welcome karo. Good night, lovely one. 🌙",
+    "🌌 Good night! Aaj ka din complete ho chuka hai — ab apni soft peace ko embrace karo. 💖",
+    "🌷 Good night, darling! Aaj bas rest, breathe, and dream a little brighter. 🌙",
+    "✨ Good night! Aaj ki khushi ko hold karo, aur raat ko calm sa feel karo. 💫",
+    "🌙 Good night, flower! Aaj khud ko gently thank you bolo, phir sleep mein lose ho jao. 🌸",
+    "💜 Good night! Khud ke liye thoda sukoon rakho — aaj bhi aap kaafi special ho. 🌙",
+    "🌌 Sweet dreams, lovely soul. Aaj ka day complete hai, ab rest and recharge. ✨",
+    "🌷 Good night, dear heart! Aaj ke liye sab good enough tha. Kal fresh start ke liye ready ho jao. 💖",
+    "💫 Good night! Aaj ke clutter ko side mein rakh do, aur calm si neend ka welcome karo. 🌙",
+    "🌙 Sleep softly, bloom peacefully. Good night, sweet one. 🌸",
+    "💜 Good night! Apni body aur mind ko utna hi pyaar do jitna woh deserve karta hai. 🌙",
+    "🌌 Good night, beautiful! Aaj ki journey ne aapko strong banaya; ab rest lena bhi important hai. ✨",
+    "🌷 Good night! Aaj ka din complete hai, now it's time for soft dreams and lighter tomorrow. 💖",
+    "💫 Good night, lovely! Kal ek fresh day bhi aapke liye hai. Aaj bas rest. 🌙",
+    "🌙 Good night, sweet soul! Aaj ke liye thank you and good rest. Tomorrow will bloom again. 🌸",
+    "💜 Sleep well, dream sweetly, wake up beautifully. Good night, darling. ✨",
+    "🌌 Good night! Aapne enough kaam kiya hai. Ab aadha chhota sa comfort bhi deserve karo. 🌙",
+    "🌷 Good night, lovely one! Aaj ki puri journey ko gently close karo, aur calm sleep lo. 💖",
+    "💫 Good night! Rest is not laziness, it's part of your growth. Love yourself into sleep. 🌙",
+    "🌙 Good night, bloom! Aaj ki chhoti baaton ko bhi appreciate karo, phir soft sleep. 🌸",
+    "💜 Good night, sweetheart! Aaj ka din khatam hua, ab aapko peace aur sweetness chahiye. ✨"
 ]
 
 
 def _daily_choice(items):
     if not items:
         return "🌸 Have a lovely day!"
-    return items[datetime_now().timetuple().tm_yday % len(items)]
+    cycle_length = max(1, len(items))
+    anchor = datetime(2025, 1, 1)
+    days_since = (datetime_now().date() - anchor.date()).days
+    return items[days_since % cycle_length]
 
 
 async def _send_fixed_wish(context, kind):

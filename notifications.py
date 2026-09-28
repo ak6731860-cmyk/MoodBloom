@@ -22,6 +22,7 @@
 #
 # ============================================================
 
+import re
 from datetime import datetime, timedelta
 from copy import deepcopy
 
@@ -209,6 +210,101 @@ def _parse_time(value):
 
     except Exception:
         return None
+
+
+def parse_custom_reminder_input(raw_text):
+    """
+    Parse a reminder from user input.
+
+    Accepted formats:
+        Title | HH:MM | Message
+        Title | HH:MM
+        Title at 15:30
+        Title at 15:30 | Stay hydrated
+    """
+
+    text = _safe_string(raw_text)
+
+    if not text:
+        return {
+            "valid": False,
+            "reason": "empty",
+            "title": "",
+            "time": "",
+            "message": "",
+        }
+
+    normalized = text.replace("—", "|").replace("–", "|")
+    parts = [part.strip() for part in normalized.split("|")]
+
+    if len(parts) >= 2:
+        title = parts[0]
+        time_value = parts[1]
+        message = " | ".join(parts[2:]) if len(parts) > 2 else ""
+
+        if not title:
+            return {
+                "valid": False,
+                "reason": "missing_title",
+                "title": "",
+                "time": "",
+                "message": "",
+            }
+
+        time_value = _parse_time(time_value)
+
+        if time_value is None:
+            return {
+                "valid": False,
+                "reason": "invalid_time",
+                "title": title,
+                "time": "",
+                "message": message,
+            }
+
+        return {
+            "valid": True,
+            "reason": "ok",
+            "title": title,
+            "time": time_value,
+            "message": message,
+        }
+
+    match = re.match(
+        r"^(?P<title>.+?)\s+(?:at|@)\s+(?P<time>\d{1,2}:\d{2})(?:\s*(?:-|:|\|)\s*(?P<message>.+))?$",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    if match:
+        title = match.group("title").strip()
+        time_value = _parse_time(match.group("time"))
+        message = (match.group("message") or "").strip()
+
+        if not title or time_value is None:
+            return {
+                "valid": False,
+                "reason": "invalid_format",
+                "title": title,
+                "time": "",
+                "message": message,
+            }
+
+        return {
+            "valid": True,
+            "reason": "ok",
+            "title": title,
+            "time": time_value,
+            "message": message,
+        }
+
+    return {
+        "valid": False,
+        "reason": "invalid_format",
+        "title": "",
+        "time": "",
+        "message": "",
+    }
 
 
 def _time_to_minutes(value):

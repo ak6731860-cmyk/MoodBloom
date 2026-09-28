@@ -13,9 +13,10 @@
 
 from __future__ import annotations
 
-import html
 import random
 from typing import Any, Dict, Optional
+
+from text_utils import bold
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, CallbackQueryHandler, CommandHandler
@@ -134,9 +135,9 @@ def format_reward(reward: Dict[str, Any]) -> str:
     value = reward.get("value", "")
 
     if reward_type == "xp":
-        return f"✨ <b>+{html.escape(str(value))} XP</b>"
+        return f"✨ {bold(f'+{value} XP')}"
 
-    return f"🎁 <b>{html.escape(str(value))}</b>"
+    return f"🎁 {bold(value)}"
 
 
 # ============================================================

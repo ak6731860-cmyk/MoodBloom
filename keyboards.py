@@ -1097,6 +1097,9 @@ def group_reminder_keyboard():
             button("🌙 9 PM", "group_remind_21"),
         ],
         [
+            button("🕒 Custom Time", "group_remind_custom"),
+        ],
+        [
             button("❌ Disable", "group_remind_disable"),
         ],
         [

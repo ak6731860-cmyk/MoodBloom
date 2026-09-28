@@ -31,46 +31,39 @@ import config
 # ============================================================
 
 MORNING_WISHES = [
-
-    "🌅 Good morning! Aaj ka din aapke liye beautiful ho. 🌸✨",
-
-    "☀️ Good morning, Bloom! Nayi subah, nayi energy, nayi possibilities. 🌷",
-
-    "🌸 Suprabhat! Aaj thoda smile kijiye, thoda relax kijiye aur apna best dijiye. 💫",
-
-    "☀️ Rise & Bloom! 🌱 Aaj ka din kal se thoda better banate hain. ✨",
-
-    "🌷 Good morning! May your day be peaceful, productive and full of little happy moments. 💖",
-
-    "🌤️ Nayi subah aa gayi! Jo bhi plan hai, ek small step se start kijiye. 🌱",
-
-    "💫 Good morning! Aaj khud ke liye bhi thoda time zaroor rakhiye. 🌸",
-
-    "🌼 Morning! Aapka aaj ka mood kis colour ka hoga? 🌈",
-
-    "☀️ Good morning! Aaj unnecessary stress ko thoda side mein rakhte hain. 😌🌸",
-
-    "🌸 Another beautiful morning, another chance to bloom. Good morning! 🌷",
-
-    "🌞 Good morning! Aaj ka goal simple hai — smile more, stress less. ✨",
-
-    "🌱 New day. New energy. New chances. Keep blooming! 🌸",
-
-    "☀️ Good morning! Aaj kuch chhota sa achha zaroor kijiye — apne liye. 💖",
-
-    "🌷 Morning Bloom! Aaj ka din calm bhi ho aur productive bhi. ✨",
-
-    "🌈 Good morning! Har din perfect nahi hota, lekin har din mein kuch achha zaroor ho sakta hai. 🌸",
-
-    "☕ Good morning! Pehle ek deep breath... phir day officially start. 😌✨",
-
-    "🌻 Rise and shine! Aaj ki story abhi likhi jaani baaki hai. 📖✨",
-
-    "💖 Good morning! Kisi aur se compare nahi — bas kal wale version se better banna hai. 🌱",
-
-    "🌤️ A fresh morning has arrived. Take it easy, take it positively. 🌸",
-
-    "🌸 Good morning from MoodBloom! Aaj positivity thodi extra rakhiye. ✨"
+    "🌅 Good morning, sunshine! Aaj ka din thoda soft, thoda sweet, aur bilkul beautiful ho. 🌸✨",
+    "☀️ Good morning, Bloom! Nayi subah, nayi shuruaat, aur nayi chhoti khushiyan. 🌷💖",
+    "🌸 Suprabhat! Aaj thoda smile, thoda deep breath, aur thoda apni care. 💫",
+    "🌼 Good morning, lovely soul! Aaj apni dil ki baat suno, phir din ko gracefully start kero. 🌷",
+    "☀️ Rise and bloom, darling! Aaj ka din aapke liye gentleness aur growth se bhara ho. 🌱✨",
+    "🌷 Good morning! Aaj koi bhi chhota sa happy moment catch kar lo — wohi aaj ka magic hai. 💖",
+    "🌤️ Nayi subah aa gayi hai, aur aaj ka plan bhi soft, slow, aur beautiful ho. 🌸",
+    "💫 Good morning! Aaj khud ke liye ek chhota sa pyaar rakhiye. Aap deserve it. 🌼",
+    "🌈 Good morning, sweetheart! Aaj ka din simple, calm, aur full of tiny joys ho. 🌷",
+    "🌸 Morning bloom! Aaj aapko apni mehnat ke saath apni softness bhi maintain karni hai. 💖✨",
+    "☀️ Good morning! Aaj stress ko side mein rakho, smile ko front mein laao. 🌸",
+    "🌷 Aaj ke liye sirf ek hi mission — apni khushi ko thoda aur space do. 💛",
+    "🌼 Good morning, beautiful! Aaj apni energy ko slowly, lovingly channel karo. 🌱",
+    "🌞 Good morning! Aaj ka goal simple hai — calm soul, happy heart, soft pace. 🌸",
+    "🌸 Good morning, lovely! Aaj ek nayi chapter ka start hai, aur woh aapke liye warm hoga. ✨",
+    "☕ Good morning! Pehle ek deep breath, phir ek gentle smile, phir day begins. 😌🌷",
+    "🌻 Rise and shine, dear one! Aaj ki kahani bas ek chhote se happy step se shuru hoti hai. 📖✨",
+    "💖 Good morning! Aaj kisi aur se compare mat karo, bas kal ke version se aaj ko better banao. 🌱",
+    "🌤️ Fresh morning, soft heart, positive mind. Aaj ki subah bhi aapke liye beautiful ho. 🌸",
+    "🌸 Good morning from MoodBloom! Aaj positivity ko thoda aur pyaar se rakho. ✨",
+    "☀️ Good morning, lovely soul! Aaj apni peace ko protect karo, aur happiness ko invite karo. 💛",
+    "🌷 Morning sunshine! Aaj kuch izzat, kuch sukoon, aur kuch adorable moments chahiye. 🌼",
+    "🌸 Good morning! Apni slow progress ko bhi celebrate karo — woh bhi growth hai. 💖",
+    "🌞 Fresh day, fresh breath, fresh promises — and a lot of cute little joys. 🌷✨",
+    "💫 Good morning, sweetheart! Aaj ka din aapke liye kind, calm, and kind of magical. 🌸",
+    "🌼 Wake up gently, bloom gently, love your day gently. Aap deserve all of it. 💖",
+    "☀️ Good morning! Aaj chhoti si smile bhi enough hai, big goals ke liye shuruat bhi. 🌱",
+    "🌷 Good morning, beautiful! Aaj apni khushi ko darr se nahi, pyaar se manage karo. ✨",
+    "🌸 Morning bloom! Aaj jo bhi ho, usse thoda softness aur thoda gratitude do. 💫",
+    "💖 Good morning! Har din ek nayi chance hota hai — ek naya, gentle, bright start. 🌷",
+    "🌞 Good morning, lovely one! Aaj apne liye ek haath se bhi pyari si attention rakho. 🌸",
+    "🌼 Aaj ka subah thoda slow, thoda sweet, aur bilkul special. Keep blooming, dear heart. 💖✨",
+    "🌷 Good morning! Aaj aap apni sabse soft aur strongest version ke beech ka balance rakho. 🌸"
 ]
 
 
@@ -309,6 +302,15 @@ def _safe_choice(items, fallback=None):
 # DAILY UNIQUE WISH
 # ============================================================
 
+def _cycle_index(length):
+    if length <= 0:
+        return 0
+
+    anchor = datetime(2025, 1, 1)
+    days_since = ( _now().date() - anchor.date() ).days
+    return days_since % length
+
+
 def get_morning_wish():
 
     global _last_wish_date
@@ -316,23 +318,9 @@ def get_morning_wish():
 
     today = _today_key()
 
-    # New day → choose a new wish
     if today != _last_wish_date:
-
-        available = [
-            wish
-            for wish in MORNING_WISHES
-            if wish != _last_wish
-        ]
-
-        if not available:
-            available = MORNING_WISHES
-
-        _last_wish = _safe_choice(
-            available,
-            MORNING_WISHES[0]
-        )
-
+        cycle_index = _cycle_index(len(MORNING_WISHES))
+        _last_wish = MORNING_WISHES[cycle_index]
         _last_wish_date = today
 
     return _last_wish

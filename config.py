@@ -2,6 +2,8 @@ import os
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
 
+from text_utils import bold
+
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -21,9 +23,9 @@ VERSION = "4.0"
 
 # Welcome / Goodbye defaults
 DEFAULT_WELCOME_MESSAGE = (
-    "🌸 <b>Welcome to MoodBloom!</b>\n\n"
+    f"🌸 {bold('Welcome to MoodBloom!')}\n\n"
     "👋 Hey {name}!\n"
-    "Welcome to <b>{group}</b> 💖\n\n"
+    f"Welcome to {bold('{group}')} 💖\n\n"
     "💭 Share moods\n"
     "📊 Group insights\n"
     "🏆 Leaderboard\n"
@@ -32,7 +34,7 @@ DEFAULT_WELCOME_MESSAGE = (
 )
 
 DEFAULT_GOODBYE_MESSAGE = (
-    "👋 <b>Goodbye, {name}!</b>\n\n"
+    f"👋 {bold('Goodbye, {name}!')}\n\n"
     "🌸 Take care and keep blooming.\n"
     "— MoodBloom • {group}"
 )
