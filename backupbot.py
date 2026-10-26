@@ -84,7 +84,7 @@ def _auto_parse_mode(text):
     Markdown, so the right parse_mode is used automatically.
 
     This replaces the old approach of defaulting every menu to
-    Markdown and rewriting <b>/<code> tags into asterisks/backticks
+    Markdown and rewriting / tags into asterisks/backticks
     — that silently broke any text style the converter didn't know
     about and left raw tags visible on screen.
     """
@@ -212,11 +212,11 @@ async def show_v4_goals(
     progress = goals.get_goal_progress(user_id)
 
     lines = [
-        "🎯 <b>DAILY BLOOM GOALS</b>",
+        "🎯 DAILY BLOOM GOALS",
         "━━━━━━━━━━━━━━━━━━",
         "",
         f"📅 Today's Progress: "
-        f"<b>{progress['completed']}/{progress['total']}</b>",
+        f"{progress['completed']}/{progress['total']}",
         f"{goals.progress_bar(user_id)} "
         f"{progress['percentage']}%",
         "",
@@ -230,7 +230,7 @@ async def show_v4_goals(
 
         lines.append(
             f"{status} {goal.get('icon', '🎯')} "
-            f"<b>{goal['title']}</b> "
+            f"{goal['title']} "
             f"(+{goal['xp']} XP)"
         )
 
@@ -248,13 +248,13 @@ async def show_v4_goals(
     if update.callback_query:
         await update.callback_query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboard,
         )
     else:
         await update.message.reply_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboard,
         )
 
@@ -284,16 +284,16 @@ async def show_v4_reward(
     )
 
     if claimed:
-        status = "✅ <b>Already Claimed Today</b>"
+        status = "✅ Already Claimed Today"
     else:
-        status = "🎁 <b>Available to Claim</b>"
+        status = "🎁 Available to Claim"
 
     text = (
-        "🎁 <b>DAILY BLOOM REWARD</b>\n"
+        "🎁 DAILY BLOOM REWARD\n"
         "━━━━━━━━━━━━━━━━━━\n\n"
-        f"🌸 <b>{reward['title']}</b>\n\n"
+        f"🌸 {reward['title']}\n\n"
         f"💌 {reward['message']}\n\n"
-        f"✨ Reward XP: <b>+{reward['xp']} XP</b>\n\n"
+        f"✨ Reward XP: +{reward['xp']} XP\n\n"
         f"{status}\n\n"
         "Come back tomorrow for a new reward. 🌱"
     )
@@ -305,13 +305,13 @@ async def show_v4_reward(
     if update.callback_query:
         await update.callback_query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboard,
         )
     else:
         await update.message.reply_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboard,
         )
 
@@ -343,7 +343,7 @@ async def show_birthday_menu(
             include_year=True,
             include_age=True,
         )
-        status_line = f"🎂 Your birthday: <b>{formatted}</b>"
+        status_line = f"🎂 Your birthday: {formatted}"
     else:
         status_line = (
             "🎂 You haven't added your birthday yet."
@@ -369,7 +369,7 @@ async def show_birthday_menu(
         upcoming_line = "📅 No upcoming birthdays yet."
 
     text = (
-        "🎂 <b>BIRTHDAYS</b>\n"
+        "🎂 BIRTHDAYS\n"
         "━━━━━━━━━━━━━━━━━━\n\n"
         f"{status_line}\n\n"
         f"{upcoming_line}\n\n"
@@ -382,13 +382,13 @@ async def show_birthday_menu(
     if update.callback_query:
         await update.callback_query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboard,
         )
     else:
         await update.message.reply_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboard,
         )
 
@@ -426,8 +426,8 @@ async def birthday_command(
 
         await update.message.reply_text(
             "✅ Birthday saved: "
-            f"<b>{result['formatted']}</b> 🎂",
-            parse_mode="HTML",
+            f"{result['formatted']} 🎂",
+            
         )
 
     await show_birthday_menu(update, context)
@@ -489,10 +489,10 @@ async def receive_birthday_date_input(
 
     await update.message.reply_text(
         "✅ Birthday saved: "
-        f"<b>{result['formatted']}</b> 🎂\n\n"
+        f"{result['formatted']} 🎂\n\n"
         "You'll get a birthday wish from MoodBloom "
         "every year! 🌸",
-        parse_mode="HTML",
+        
     )
 
     await show_birthday_menu(update, context)
@@ -532,7 +532,7 @@ async def handle_birthday_callback(
         if not record:
 
             text = (
-                "🎂 <b>My Birthday</b>\n\n"
+                "🎂 My Birthday\n\n"
                 "You haven't added your birthday yet.\n"
                 "Tap ➕ Add to set it."
             )
@@ -546,7 +546,7 @@ async def handle_birthday_callback(
             )
 
             text = (
-                "🎂 <b>My Birthday</b>\n\n"
+                "🎂 My Birthday\n\n"
                 f"📅 {formatted}\n"
                 "🔔 Reminders: "
                 f"{'On' if record.get('reminder_enabled', True) else 'Off'}\n"
@@ -558,7 +558,7 @@ async def handle_birthday_callback(
 
         await query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboards.birthday_manage_keyboard(),
         )
 
@@ -575,17 +575,17 @@ async def handle_birthday_callback(
         action = "Add" if data == "birthday_add" else "Update"
 
         text = (
-            f"🎂 <b>{action} Your Birthday</b>\n\n"
+            f"🎂 {action} Your Birthday\n\n"
             "Please send your birthday in one of these "
             "formats:\n"
-            "• <code>DD-MM</code> (e.g. 15-08)\n"
-            "• <code>DD-MM-YYYY</code> (e.g. 15-08-2000)\n\n"
+            "• DD-MM (e.g. 15-08)\n"
+            "• DD-MM-YYYY (e.g. 15-08-2000)\n\n"
             "Send /cancel to stop."
         )
 
         await query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboards.bloom_back_keyboard(),
         )
 
@@ -625,12 +625,12 @@ async def handle_birthday_callback(
 
         text = birthdays.format_birthday_list(
             upcoming,
-            title="📅 <b>Upcoming Birthdays (30 days)</b>",
+            title="📅 Upcoming Birthdays (30 days)",
         )
 
         await query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboards.birthday_manage_keyboard(),
         )
 
@@ -646,12 +646,12 @@ async def handle_birthday_callback(
 
         text = birthdays.format_birthday_list(
             today_list,
-            title="🎉 <b>Today's Birthdays</b>",
+            title="🎉 Today's Birthdays",
         )
 
         await query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboards.birthday_manage_keyboard(),
         )
 
@@ -668,10 +668,10 @@ async def handle_birthday_callback(
         if not chat or chat.type == "private":
 
             text = (
-                "👥 <b>Group Birthdays</b>\n\n"
+                "👥 Group Birthdays\n\n"
                 "This works inside a group chat.\n"
                 "Add yourself there with:\n"
-                "<code>/groupbirthday DD-MM</code>"
+                "/groupbirthday DD-MM"
             )
 
         else:
@@ -688,12 +688,12 @@ async def handle_birthday_callback(
             )
 
             lines = [
-                "👥 <b>Group Birthdays</b>",
+                "👥 Group Birthdays",
                 "",
             ]
 
             if today_list:
-                lines.append("🎉 <b>Today:</b>")
+                lines.append("🎉 Today:")
                 for record in today_list:
                     lines.append(
                         f"• {birthdays.get_display_name(record)}"
@@ -703,21 +703,21 @@ async def handle_birthday_callback(
             lines.append(
                 birthdays.format_birthday_list(
                     upcoming_list,
-                    title="📅 <b>Upcoming (30 days)</b>",
+                    title="📅 Upcoming (30 days)",
                 )
             )
 
             lines.append("")
             lines.append(
                 "Add yourself: "
-                "<code>/groupbirthday DD-MM</code>"
+                "/groupbirthday DD-MM"
             )
 
             text = "\n".join(lines)
 
         await query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboards.birthday_manage_keyboard(),
         )
 
@@ -781,9 +781,9 @@ async def group_birthday_command(
 
     if not context.args:
         await update.message.reply_text(
-            "🎂 Usage: <code>/groupbirthday DD-MM</code>\n"
-            "Example: <code>/groupbirthday 15-08</code>",
-            parse_mode="HTML",
+            "🎂 Usage: /groupbirthday DD-MM\n"
+            "Example: /groupbirthday 15-08",
+            
         )
         return
 
@@ -803,8 +803,8 @@ async def group_birthday_command(
 
     await update.message.reply_text(
         "✅ Your birthday for this group is saved: "
-        f"<b>{birthdays.format_birthday(result['birthday']['month'], result['birthday']['day'])}</b> 🎂",
-        parse_mode="HTML",
+        f"{birthdays.format_birthday(result['birthday']['month'], result['birthday']['day'])} 🎂",
+        
     )
 
 
@@ -834,11 +834,11 @@ async def _study_timer_complete(
         await context.bot.send_message(
             chat_id=chat_id,
             text=(
-                "⏰ <b>Study Timer Done!</b>\n\n"
+                "⏰ Study Timer Done!\n\n"
                 "Tap ✅ Complete to log this session "
                 "and earn your Study goal XP. 📚"
             ),
-            parse_mode="HTML",
+            
             reply_markup=keyboards.study_keyboard(
                 active=True
             ),
@@ -861,27 +861,27 @@ async def show_study_menu(
     if summary["active"]:
 
         text = (
-            "📚 <b>STUDY MODE</b>\n"
+            "📚 STUDY MODE\n"
             "━━━━━━━━━━━━━━━━━━\n\n"
             "🟢 A session is currently running.\n\n"
             "Tap ✅ when you're done, or 🛑 to cancel.\n\n"
             f"📈 Completed sessions: "
-            f"<b>{summary['completed_sessions']}</b>\n"
+            f"{summary['completed_sessions']}\n"
             f"⏱️ Total study time: "
-            f"<b>{summary['total_minutes']} min</b>"
+            f"{summary['total_minutes']} min"
         )
 
     else:
 
         text = (
-            "📚 <b>STUDY MODE</b>\n"
+            "📚 STUDY MODE\n"
             "━━━━━━━━━━━━━━━━━━\n\n"
             "Focus for a set time, then mark it complete "
             "to earn Study goal XP. 🌱\n\n"
             f"📈 Completed sessions: "
-            f"<b>{summary['completed_sessions']}</b>\n"
+            f"{summary['completed_sessions']}\n"
             f"⏱️ Total study time: "
-            f"<b>{summary['total_minutes']} min</b>\n\n"
+            f"{summary['total_minutes']} min\n\n"
             "Choose a duration to begin:"
         )
 
@@ -892,13 +892,13 @@ async def show_study_menu(
     if update.callback_query:
         await update.callback_query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboard,
         )
     else:
         await update.message.reply_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboard,
         )
 
@@ -976,10 +976,10 @@ async def handle_study_callback(
             print("Study timer schedule error:", error)
 
         await query.edit_message_text(
-            "📚 <b>Study Session Started!</b>\n\n"
-            f"⏱️ Duration: <b>{result['minutes']} min</b>\n\n"
+            "📚 Study Session Started!\n\n"
+            f"⏱️ Duration: {result['minutes']} min\n\n"
             "Focus up — I'll ping you when time's up. 🌱",
-            parse_mode="HTML",
+            
             reply_markup=keyboards.study_keyboard(
                 active=True
             ),
@@ -1050,25 +1050,25 @@ async def handle_study_callback(
         if goal_result.get("success"):
             xp_line = (
                 f"✨ Study goal completed: "
-                f"<b>+{goal_result.get('xp', 0)} XP</b>\n\n"
+                f"+{goal_result.get('xp', 0)} XP\n\n"
             )
 
         text = (
-            "🎉 <b>SESSION COMPLETE!</b>\n"
+            "🎉 SESSION COMPLETE!\n"
             "━━━━━━━━━━━━━━━━━━\n\n"
             f"⏱️ You studied for "
-            f"<b>{result['minutes']} min</b>\n\n"
+            f"{result['minutes']} min\n\n"
             f"{xp_line}"
             f"📈 Total sessions: "
-            f"<b>{result['sessions']}</b>\n"
+            f"{result['sessions']}\n"
             f"⏳ Total time: "
-            f"<b>{result['total_minutes']} min</b>\n\n"
+            f"{result['total_minutes']} min\n\n"
             "Great focus! Keep blooming. 🌸"
         )
 
         await query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboards.study_keyboard(
                 active=False
             ),
@@ -1136,7 +1136,7 @@ async def show_quiet_hours_menu(
     quiet = settings.get("quiet_hours", {}) or {}
 
     text = (
-        "🔕 <b>Quiet Hours</b>\n\n"
+        "🔕 Quiet Hours\n\n"
         "During quiet hours, MoodBloom won't send you "
         "notifications.\n\n"
         f"Status: "
@@ -1147,7 +1147,7 @@ async def show_quiet_hours_menu(
 
     await update.callback_query.edit_message_text(
         text,
-        parse_mode="HTML",
+        
         reply_markup=keyboards.quiet_hours_keyboard(
             settings
         ),
@@ -1166,19 +1166,19 @@ async def show_custom_reminders_menu(
 
     if reminders:
         text = (
-            "📝 <b>Custom Reminders</b>\n\n"
+            "📝 Custom Reminders\n\n"
             "Tap a reminder to manage it, or add a new one."
         )
     else:
         text = (
-            "📝 <b>Custom Reminders</b>\n\n"
+            "📝 Custom Reminders\n\n"
             "You don't have any custom reminders yet. "
             "Add one below! ⏰"
         )
 
     await update.callback_query.edit_message_text(
         text,
-        parse_mode="HTML",
+        
         reply_markup=keyboards.custom_reminders_keyboard(
             reminders
         ),
@@ -1260,12 +1260,12 @@ async def handle_notification_callback(
         ] = True
 
         await query.edit_message_text(
-            "🔕 <b>Set Quiet Hours</b>\n\n"
+            "🔕 Set Quiet Hours\n\n"
             "Send the range as "
-            "<code>HH:MM-HH:MM</code>\n"
-            "Example: <code>23:00-07:00</code>\n\n"
+            "HH:MM-HH:MM\n"
+            "Example: 23:00-07:00\n\n"
             "Send /cancel to stop.",
-            parse_mode="HTML",
+            
         )
 
         return
@@ -1285,15 +1285,15 @@ async def handle_notification_callback(
         ] = True
 
         await query.edit_message_text(
-            "📝 <b>Add Custom Reminder</b>\n\n"
+            "📝 Add Custom Reminder\n\n"
             "Send it as:\n"
-            "<code>Title | HH:MM | Message</code>\n\n"
+            "Title | HH:MM | Message\n\n"
             "Example:\n"
-            "<code>Drink Water | 15:30 | Stay "
-            "hydrated! 💧</code>\n\n"
+            "Drink Water | 15:30 | Stay "
+            "hydrated! 💧\n\n"
             "(Message is optional.)\n"
             "Send /cancel to stop.",
-            parse_mode="HTML",
+            
         )
 
         return
@@ -1318,8 +1318,8 @@ async def handle_notification_callback(
             return
 
         text = (
-            "📝 <b>"
-            f"{reminder.get('title', '')}</b>\n\n"
+            "📝 "
+            f"{reminder.get('title', '')}\n\n"
             f"⏰ Time: {reminder.get('time', '')}\n"
             f"💬 Message: "
             f"{reminder.get('message') or '—'}\n"
@@ -1329,7 +1329,7 @@ async def handle_notification_callback(
 
         await query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=(
                 keyboards.custom_reminder_view_keyboard(
                     reminder_id
@@ -1416,9 +1416,9 @@ async def receive_quiet_hours_input(
 
         await update.message.reply_text(
             "❌ Invalid format. Use "
-            "<code>HH:MM-HH:MM</code>, e.g. "
-            "<code>23:00-07:00</code>",
-            parse_mode="HTML",
+            "HH:MM-HH:MM, e.g. "
+            "23:00-07:00",
+            
         )
         return
 
@@ -1435,8 +1435,8 @@ async def receive_quiet_hours_input(
 
         await update.message.reply_text(
             "❌ Couldn't parse those times. Try "
-            "<code>23:00-07:00</code>.",
-            parse_mode="HTML",
+            "23:00-07:00.",
+            
         )
         return
 
@@ -1484,8 +1484,8 @@ async def receive_custom_reminder_input(
 
         await update.message.reply_text(
             "❌ Invalid format. Use:\n"
-            "<code>Title | HH:MM | Message</code>",
-            parse_mode="HTML",
+            "Title | HH:MM | Message",
+            
         )
         return
 
@@ -1515,9 +1515,9 @@ async def receive_custom_reminder_input(
     ] = False
 
     await update.message.reply_text(
-        f"✅ Reminder added: <b>{title}</b> at "
-        f"<b>{reminder_time}</b> ⏰",
-        parse_mode="HTML",
+        f"✅ Reminder added: {title} at "
+        f"{reminder_time} ⏰",
+        
     )
 
     await show_notification_menu(update, context)
@@ -1555,15 +1555,15 @@ async def handle_v4_callback(
         goal_progress = goals.get_goal_progress(user_id)
 
         text = (
-            "🌸 <b>MOODBLOOM — BLOOM JOURNEY</b>\n"
+            "🌸 MOODBLOOM — BLOOM JOURNEY\n"
             "━━━━━━━━━━━━━━━━━━\n\n"
-            f"👤 <b>{user.first_name}</b>\n\n"
-            f"⭐ <b>Level {level['level']}</b> — "
+            f"👤 {user.first_name}\n\n"
+            f"⭐ Level {level['level']} — "
             f"{level['title']}\n"
-            f"✨ XP: <b>{level['xp']}</b>\n\n"
+            f"✨ XP: {level['xp']}\n\n"
             f"📈 Progress: {level['progress']}%\n"
             f"{xp_system.progress_bar(user_id)}\n\n"
-            f"🎯 <b>Today's Goals</b>\n"
+            f"🎯 Today's Goals\n"
             f"{goals.progress_bar(user_id)} "
             f"{goal_progress['completed']}/"
             f"{goal_progress['total']}\n\n"
@@ -1573,7 +1573,7 @@ async def handle_v4_callback(
 
         await query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboards.bloom_dashboard_keyboard(),
         )
 
@@ -1628,28 +1628,28 @@ async def handle_v4_callback(
         info = xp_system.get_progress(user_id)
 
         text = (
-            "⭐ <b>YOUR BLOOM LEVEL</b>\n"
+            "⭐ YOUR BLOOM LEVEL\n"
             "━━━━━━━━━━━━━━━━━━\n\n"
-            f"🌸 Level: <b>{info['level']}</b>\n"
-            f"🏷️ Title: <b>{info['title']}</b>\n"
-            f"✨ XP: <b>{info['xp']}</b>\n\n"
+            f"🌸 Level: {info['level']}\n"
+            f"🏷️ Title: {info['title']}\n"
+            f"✨ XP: {info['xp']}\n\n"
             f"{xp_system.progress_bar(user_id)}\n"
-            f"📈 Progress: <b>{info['progress']}%</b>\n"
+            f"📈 Progress: {info['progress']}%\n"
         )
 
         if info["next_level_xp"] is not None:
             text += (
                 f"\n🚀 Next Level: "
-                f"<b>{info['next_level_xp']} XP</b>\n"
+                f"{info['next_level_xp']} XP\n"
                 f"🎯 Remaining: "
-                f"<b>{info['remaining']} XP</b>"
+                f"{info['remaining']} XP"
             )
         else:
-            text += "\n🏆 <b>MAX LEVEL REACHED!</b>"
+            text += "\n🏆 MAX LEVEL REACHED!"
 
         await query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboards.xp_keyboard(),
         )
 
@@ -1696,23 +1696,23 @@ async def handle_v4_callback(
         )
 
         text = (
-            "🎉 <b>GOAL COMPLETED!</b>\n"
+            "🎉 GOAL COMPLETED!\n"
             "━━━━━━━━━━━━━━━━━━\n\n"
             f"{goal.get('icon', '🎯')} "
-            f"<b>{goal.get('title', 'Goal')}</b>\n\n"
+            f"{goal.get('title', 'Goal')}\n\n"
             f"✨ You earned "
-            f"<b>+{result['xp']} XP</b>\n\n"
+            f"+{result['xp']} XP\n\n"
             f"🎯 Today's Progress:\n"
             f"{goals.progress_bar(user_id)} "
             f"{progress['completed']}/"
             f"{progress['total']}\n\n"
             f"⭐ Current Level: "
-            f"<b>{level_info['level']}</b>"
+            f"{level_info['level']}"
         )
 
         await query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboards.goals_keyboard(
                 goals.get_daily_goals(user_id)
             ),
@@ -1758,20 +1758,20 @@ async def handle_v4_callback(
         )
 
         text = (
-            "🎉 <b>REWARD CLAIMED!</b>\n"
+            "🎉 REWARD CLAIMED!\n"
             "━━━━━━━━━━━━━━━━━━\n\n"
-            f"🌸 <b>{reward.get('title', 'Bloom Reward')}</b>\n\n"
+            f"🌸 {reward.get('title', 'Bloom Reward')}\n\n"
             f"💌 {reward.get('message', '')}\n\n"
             f"✨ You earned "
-            f"<b>+{result.get('xp', 0)} XP</b>\n\n"
+            f"+{result.get('xp', 0)} XP\n\n"
             f"⭐ Current Level: "
-            f"<b>{level_info['level']}</b>\n\n"
+            f"{level_info['level']}\n\n"
             "Come back tomorrow for another reward. 🌱"
         )
 
         await query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboards.reward_keyboard(
                 claimed=True
             ),
@@ -2252,14 +2252,14 @@ async def bloom_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     goal_progress = goals.get_goal_progress(user_id)
 
     text = (
-        "🌸 <b>MOODBLOOM — BLOOM JOURNEY</b>\n"
+        "🌸 MOODBLOOM — BLOOM JOURNEY\n"
         "━━━━━━━━━━━━━━━━━━\n\n"
-        f"👤 <b>{user.first_name}</b>\n\n"
-        f"⭐ <b>Level {level['level']}</b> — {level['title']}\n"
-        f"✨ XP: <b>{level['xp']}</b>\n\n"
+        f"👤 {user.first_name}\n\n"
+        f"⭐ Level {level['level']} — {level['title']}\n"
+        f"✨ XP: {level['xp']}\n\n"
         f"📈 Progress: {level['progress']}%\n"
         f"{xp_system.progress_bar(user_id)}\n\n"
-        f"🎯 <b>Today's Goals</b>\n"
+        f"🎯 Today's Goals\n"
         f"{goals.progress_bar(user_id)} "
         f"{goal_progress['completed']}/{goal_progress['total']}\n\n"
         "🌱 Keep taking small steps.\n"
@@ -2268,7 +2268,7 @@ async def bloom_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
         text,
-        parse_mode="HTML",
+        
         reply_markup=keyboards.bloom_dashboard_keyboard(),
     )
 

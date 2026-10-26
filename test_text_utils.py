@@ -1,15 +1,17 @@
-import pytest
-
-from text_utils import bold, code, escape_html, italic, title
+from text_utils import bold, code, escape_html, italic, title, join_lines
 
 
-def test_escape_html_and_formatting_helpers():
-    assert escape_html("<tag> & hi") == "&lt;tag&gt; &amp; hi"
-    assert bold("Mood") == "<b>Mood</b>"
-    assert italic("gentle") == "<i>gentle</i>"
-    assert code("DD-MM") == "<code>DD-MM</code>"
-    assert title("Daily Bloom") == "<b>Daily Bloom</b>"
+def test_formatting_helpers_return_plain_text():
+    assert escape_html("<tag> & hi") == "<tag> & hi"
+    assert bold("Mood") == "Mood"
+    assert italic("gentle") == "gentle"
+    assert code("DD-MM") == "DD-MM"
+    assert title("Daily Bloom") == "Daily Bloom"
 
 
-def test_title_escapes_special_chars():
-    assert title("A & B < C") == "<b>A &amp; B &lt; C</b>"
+def test_plain_text_preserves_special_characters():
+    assert title("A & B < C") == "A & B < C"
+
+
+def test_join_lines():
+    assert join_lines(["one", "two"]) == "one\ntwo"

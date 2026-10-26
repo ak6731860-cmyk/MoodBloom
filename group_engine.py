@@ -541,13 +541,13 @@ async def group_command(
         return
 
     text = (
-        "🌸 <b>MoodBloom Group</b>\n\n"
+        "🌸 MoodBloom Group\n\n"
         "Group mein kya karna hai?"
     )
 
     await update.effective_message.reply_text(
         text,
-        parse_mode="HTML",
+        
         reply_markup=group_menu_keyboard(),
     )
 
@@ -585,8 +585,8 @@ async def show_group_mood(
 
     text = (
         f"{mood['emoji']} "
-        f"<b>Group Mood: "
-        f"{safe(mood['name'])}</b>\n\n"
+        f"Group Mood: "
+        f"{safe(mood['name'])}\n\n"
         f"{safe(mood['text'])}"
     )
 
@@ -627,9 +627,9 @@ async def show_group_story(
     state["story"] = story["title"]
 
     text = (
-        f"<b>{safe(story['title'])}</b>\n\n"
+        f"{safe(story['title'])}\n\n"
         f"{safe(story['text'])}\n\n"
-        "🌸 <i>To be continued...</i>"
+        "🌸 To be continued..."
     )
 
     await edit_or_send_group(
@@ -710,7 +710,7 @@ async def show_group_fun(
         return
 
     text = (
-        "🎲 <b>Group Fun</b>\n\n"
+        "🎲 Group Fun\n\n"
         "Kuch masti karte hain! 😄\n\n"
         "Ek option choose karo."
     )
@@ -774,7 +774,7 @@ async def play_group_fun(
     )
 
     text = (
-        f"<b>{title}</b>\n\n"
+        f"{title}\n\n"
         f"{safe(result)}\n\n"
         "👇 Next one ke liye button dabao."
     )
@@ -840,7 +840,7 @@ async def show_group_question(
     state["question"] = question
 
     text = (
-        "<b>💬 Group Question</b>\n\n"
+        "💬 Group Question\n\n"
         f"{safe(question)}\n\n"
         "Sab apna answer de sakte ho. 🌸"
     )
@@ -998,7 +998,7 @@ async def start_group_mystery(
     first_clue = mystery["clues"][0]
 
     text = (
-        f"<b>{safe(mystery['title'])}</b>\n\n"
+        f"{safe(mystery['title'])}\n\n"
         "Case open hai. 🕵️\n\n"
         f"🔎 {safe(first_clue)}\n\n"
         "Group milkar solve karo!"
@@ -1048,7 +1048,7 @@ async def next_group_clue(
     if clue_index >= len(mystery["clues"]):
 
         text = (
-            f"<b>{safe(mystery['title'])}</b>\n\n"
+            f"{safe(mystery['title'])}\n\n"
             "🔎 Saare clues reveal ho chuke hain!\n\n"
             "🎯 Ab answer guess karo."
         )
@@ -1070,8 +1070,8 @@ async def next_group_clue(
     clue = mystery["clues"][clue_index]
 
     text = (
-        f"<b>{safe(mystery['title'])}</b>\n\n"
-        f"🔎 <b>Clue {clue_index + 1}</b>\n"
+        f"{safe(mystery['title'])}\n\n"
+        f"🔎 Clue {clue_index + 1}\n"
         f"{safe(clue)}\n\n"
         "🕵️ Think carefully..."
     )
@@ -1122,10 +1122,10 @@ async def group_mystery_hint(
         )
 
     text = (
-        f"<b>{safe(mystery['title'])}</b>\n\n"
-        "💡 <b>Hint:</b>\n"
+        f"{safe(mystery['title'])}\n\n"
+        "💡 Hint:\n"
         f"Answer looks like: "
-        f"<code>{safe(hint)}</code>"
+        f"{safe(hint)}"
     )
 
     await edit_or_send_group(
@@ -1161,8 +1161,8 @@ async def show_mystery_solve(
         return
 
     text = (
-        f"<b>{safe(mystery['title'])}</b>\n\n"
-        "🎯 <b>Final Answer</b>\n\n"
+        f"{safe(mystery['title'])}\n\n"
+        "🎯 Final Answer\n\n"
         "Group milkar ek option choose karo. 👇"
     )
 
@@ -1220,7 +1220,7 @@ async def check_mystery_answer(
         )
 
         text = (
-            f"<b>{safe(mystery['title'])}</b>\n\n"
+            f"{safe(mystery['title'])}\n\n"
             f"{safe(mystery['success'])}\n\n"
             "🌸 Mystery solved!"
         )
@@ -1230,7 +1230,7 @@ async def check_mystery_answer(
 
         await query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=mystery_keyboard(),
         )
 
@@ -1266,7 +1266,7 @@ async def show_admin_menu(
     settings = get_settings(context)
 
     text = (
-        "👑 <b>Group Admin</b>\n\n"
+        "👑 Group Admin\n\n"
         "Yahan se MoodBloom group features control kar sakte ho."
     )
 
@@ -1369,7 +1369,7 @@ async def welcome_new_member(
         try:
             await update.message.reply_text(
                 message,
-                parse_mode="HTML",
+                
             )
         except Exception:
             pass
@@ -1412,7 +1412,7 @@ async def goodbye_member(
     try:
         await update.message.reply_text(
             message,
-            parse_mode="HTML",
+            
         )
     except Exception:
         pass
@@ -1462,7 +1462,7 @@ async def edit_or_send_group(
         try:
             await query.edit_message_text(
                 text,
-                parse_mode="HTML",
+                
                 reply_markup=keyboard,
             )
             return
@@ -1473,7 +1473,7 @@ async def edit_or_send_group(
 
         await update.effective_message.reply_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboard,
         )
 
@@ -1521,9 +1521,9 @@ async def handle_group_callback(
         await query.answer()
 
         await query.edit_message_text(
-            "🌸 <b>MoodBloom Group</b>\n\n"
+            "🌸 MoodBloom Group\n\n"
             "Group mein kya karna hai?",
-            parse_mode="HTML",
+            
             reply_markup=group_menu_keyboard(),
         )
 
@@ -1568,7 +1568,7 @@ async def handle_group_callback(
             return
 
         text = (
-            "🕵️ <b>Group Mystery</b>\n\n"
+            "🕵️ Group Mystery\n\n"
             "Ek case choose karo aur clues milkar solve karo."
         )
 
@@ -1785,10 +1785,10 @@ async def group_mood_command(
 
     await update.effective_message.reply_text(
         f"{mood['emoji']} "
-        f"<b>Group Mood: "
-        f"{safe(mood['name'])}</b>\n\n"
+        f"Group Mood: "
+        f"{safe(mood['name'])}\n\n"
         f"{safe(mood['text'])}",
-        parse_mode="HTML",
+        
     )
 
 

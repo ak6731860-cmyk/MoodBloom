@@ -201,7 +201,7 @@ async def show_mystery_box(
     """
 
     text = (
-        "🎁 <b>Mystery Box</b>\n\n"
+        "🎁 Mystery Box\n\n"
         "Ek chhota sa surprise aapka wait kar raha hai. 🌸\n\n"
         "Box kholo aur dekho aaj kya milta hai ✨"
     )
@@ -211,14 +211,14 @@ async def show_mystery_box(
 
         await query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=mystery_box_keyboard(),
         )
 
     elif update.effective_message:
         await update.effective_message.reply_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=mystery_box_keyboard(),
         )
 
@@ -296,7 +296,7 @@ async def open_mystery_box(
         reward_text = format_reward(reward)
 
         text = (
-            "🎁 <b>Mystery Box Opened!</b>\n\n"
+            "🎁 Mystery Box Opened!\n\n"
             "✨ Aapko mila:\n\n"
             f"{reward_text}\n\n"
             "🌸 Keep blooming!"
@@ -313,14 +313,14 @@ async def open_mystery_box(
 
             await query.edit_message_text(
                 text,
-                parse_mode="HTML",
+                
                 reply_markup=result_keyboard(),
             )
 
         elif update.effective_message:
             await update.effective_message.reply_text(
                 text,
-                parse_mode="HTML",
+                
                 reply_markup=result_keyboard(),
             )
 
@@ -385,9 +385,9 @@ async def handle_reward_callback(
         await query.answer()
 
         await query.edit_message_text(
-            "🌸 <b>MoodBloom</b>\n\n"
+            "🌸 MoodBloom\n\n"
             "Jab mann kare, phir milte hain. 💖",
-            parse_mode="HTML",
+            
         )
 
         return

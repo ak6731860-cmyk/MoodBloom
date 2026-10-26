@@ -1,28 +1,33 @@
+"""Plain-text helpers for Telegram messages.
+
+MoodBloom uses Python strings and Telegram inline keyboards. These helpers no
+longer emit HTML tags, so message text remains readable without HTML parsing.
+"""
 from __future__ import annotations
 
-import html
 from typing import Any, Iterable
 
 
 def escape_html(value: Any) -> str:
-    """Escape text for Telegram HTML-safe output."""
-    return html.escape(str(value), quote=False)
+    """Backward-compatible name; returns safe plain text without HTML entities."""
+    return str(value)
 
 
 def bold(value: Any) -> str:
-    return f"<b>{escape_html(value)}</b>"
+    """Backward-compatible name; plain text has no HTML formatting tags."""
+    return str(value)
 
 
 def italic(value: Any) -> str:
-    return f"<i>{escape_html(value)}</i>"
+    return str(value)
 
 
 def code(value: Any) -> str:
-    return f"<code>{escape_html(value)}</code>"
+    return str(value)
 
 
 def title(value: Any) -> str:
-    return bold(value)
+    return str(value)
 
 
 def join_lines(lines: Iterable[str]) -> str:

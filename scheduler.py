@@ -637,7 +637,7 @@ async def send_daily_goals_notifications(
                 continue
 
             text = (
-                "🎯 <b>MoodBloom Daily Goals</b>\n\n"
+                "🎯 MoodBloom Daily Goals\n\n"
                 "Good morning, Bloom! 🌸\n"
                 "Aaj ke goals aapka wait kar rahe hain. ✨\n\n"
                 f"📌 Remaining goals: {len(incomplete)}\n\n"
@@ -738,7 +738,7 @@ async def send_daily_reward_notifications(
                 continue
 
             text = (
-                "🎁 <b>Daily Reward</b>\n\n"
+                "🎁 Daily Reward\n\n"
                 "Good morning, Bloom! 🌸\n"
                 "Aaj ka Daily Reward ready hai! ✨\n\n"
                 "Claim karke apna XP grow kijiye. ⭐"
@@ -919,7 +919,7 @@ async def send_birthday_notifications(
                 )
 
             text = (
-                "🎂 <b>Happy Birthday from MoodBloom!</b> 🎉\n\n"
+                "🎂 Happy Birthday from MoodBloom! 🎉\n\n"
                 f"{birthday_wish}\n\n"
                 "🌸 May your day be full of happiness, "
                 "peace and beautiful moments! ✨"
@@ -1051,7 +1051,7 @@ async def process_custom_notifications(
                         context,
                         user_id,
                         (
-                            "⏰ <b>MoodBloom Reminder</b>\n\n"
+                            "⏰ MoodBloom Reminder\n\n"
                             f"{message}"
                         ),
                     )
@@ -2013,7 +2013,7 @@ def format_scheduler_status(
     if not status.get("available"):
 
         return (
-            "⚠️ <b>Scheduler Status</b>\n\n"
+            "⚠️ Scheduler Status\n\n"
             "❌ JobQueue unavailable."
         )
 
@@ -2025,12 +2025,12 @@ def format_scheduler_status(
     if not jobs:
 
         return (
-            "⚠️ <b>Scheduler Status</b>\n\n"
+            "⚠️ Scheduler Status\n\n"
             "No scheduled jobs found."
         )
 
     lines = [
-        "🌸 <b>MoodBloom Scheduler</b>",
+        "🌸 MoodBloom Scheduler",
         "",
         f"📊 Active Jobs: {len(jobs)}",
         "",

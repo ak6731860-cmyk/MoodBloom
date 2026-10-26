@@ -71,7 +71,7 @@ DEFAULT_SETTINGS = {
 }
 
 MAX_HISTORY_ITEMS = 365
-MAX_CUSTOM_REMINDERS = 50
+MAX_CUSTOM_REMINDERS = None  # No application-level limit
 
 
 # ============================================================
@@ -539,11 +539,6 @@ def _initialize_notification_storage(
     if not isinstance(custom, list):
         custom = []
         storage["custom_reminders"] = custom
-
-    if len(custom) > MAX_CUSTOM_REMINDERS:
-        del custom[
-            :-MAX_CUSTOM_REMINDERS
-        ]
 
     # --------------------------------------------------------
     # Metadata
@@ -1542,9 +1537,6 @@ def add_custom_reminder(
         "custom_reminders",
         []
     )
-
-    if len(reminders) >= MAX_CUSTOM_REMINDERS:
-        return None
 
     existing_ids = {
         str(item.get("id"))

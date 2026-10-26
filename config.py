@@ -17,7 +17,7 @@ DATA_FILE = "data/history.json"
 
 BOT_NAME = "MoodBloom"
 
-VERSION = "4.0"
+VERSION = "4.2 Premium Reminder Edition"
 
 
 

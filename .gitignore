@@ -1,0 +1,10 @@
+.env
+*.env
+.venv/
+venv/
+venv312/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+data/reminders.json
+data/*.tmp

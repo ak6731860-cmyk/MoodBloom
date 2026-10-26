@@ -258,19 +258,22 @@ def reminder_keyboard():
 def notification_keyboard():
     return markup([
         [
-            button("🔔 Enable All", "notify_enable_all"),
-            button("🔕 Disable All", "notify_disable_all"),
+            button("🌅 Morning", "notif_toggle_morning"),
+            button("💭 Mood check", "notif_toggle_mood_check"),
         ],
         [
-            button("🌅 Morning", "notify_morning"),
-            button("💭 Mood", "notify_mood"),
+            button("🎯 Goals", "notif_toggle_daily_goals"),
+            button("🎁 Reward", "notif_toggle_daily_reward"),
         ],
         [
-            button("🎯 Goals", "notify_goals"),
-            button("🎁 Reward", "notify_reward"),
+            button("🎂 Birthday", "notif_toggle_birthday"),
         ],
         [
-            button("🎂 Birthday", "notify_birthday"),
+            button("🌙 Quiet hours", "notif_quiet_menu"),
+            button("📝 Custom reminders", "notif_reminders"),
+        ],
+        [
+            button("📊 Notification stats", "notif_stats"),
         ],
         [
             button("🏠 Home", "home"),
@@ -631,7 +634,7 @@ def xp_keyboard():
             button("🎁 Reward", "v4_reward"),
         ],
         [
-            button("📜 XP History", "v4_xp_history"),
+            button("⭐ XP Progress", "v4_xp_history"),
         ],
         [
             button("🏆 Achievements", "menu_achievements"),
@@ -915,7 +918,7 @@ def group_keyboard():
             button("🕵️ Mystery", "mb_mystery|start"),
         ],
         [
-            button("⏰ Reminder", "group_reminder"),
+            button("⏰ Reminder Studio", "rem2|menu|group"),
             button("🛡️ Admin", "group_admin"),
         ],
         [
@@ -1043,7 +1046,7 @@ def group_admin_keyboard():
             button("🛡️ Moderation", "group_moderation"),
         ],
         [
-            button("⏰ Reminders", "group_reminder"),
+            button("⏰ Reminder Studio", "rem2|menu|group"),
         ],
         [
             button("📢 Announcement", "group_announcement"),
@@ -1089,23 +1092,16 @@ def group_welcome_keyboard():
 def group_reminder_keyboard():
     return markup([
         [
-            button("🌅 8 AM", "group_remind_8"),
-            button("☀️ 12 PM", "group_remind_12"),
+            button("➕ New group reminder", "rem2|new|group"),
         ],
         [
-            button("🌆 6 PM", "group_remind_18"),
-            button("🌙 9 PM", "group_remind_21"),
+            button("📨 Send to a person", "rem2|new|person_group"),
         ],
         [
-            button("🕒 Custom Time", "group_remind_custom"),
-        ],
-        [
-            button("❌ Disable", "group_remind_disable"),
+            button("📋 Saved reminders", "rem2|list|group"),
         ],
         [
             button("🛡️ Admin", "group_admin"),
-        ],
-        [
             button("👥 Group", "menu_group"),
         ],
     ])
@@ -1288,7 +1284,7 @@ def confirmation_keyboard(
 def reset_confirmation_keyboard():
     return markup([
         [
-            button("⚠️ Reset", "reset_confirm"),
+            button("🗑️ Clear history", "clear_confirm"),
             button("❌ Cancel", "reset_cancel"),
         ]
     ])

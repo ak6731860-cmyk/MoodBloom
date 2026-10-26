@@ -575,20 +575,20 @@ async def show_bloom_menu(
 ) -> None:
 
     text = (
-        "🌸 <b>MoodBloom</b>\n\n"
+        "🌸 MoodBloom\n\n"
         "Aaj aapko kya chahiye? 💖"
     )
 
     if update.callback_query:
         await update.callback_query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=bloom_menu_keyboard(),
         )
     elif update.effective_message:
         await update.effective_message.reply_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=bloom_menu_keyboard(),
         )
 
@@ -603,20 +603,20 @@ async def show_mood_menu(
 ) -> None:
 
     text = (
-        "🌸 <b>How are you feeling?</b>\n\n"
+        "🌸 How are you feeling?\n\n"
         "Jo closest lage, choose karo. 🫶"
     )
 
     if update.callback_query:
         await update.callback_query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=mood_keyboard(),
         )
     else:
         await update.effective_message.reply_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=mood_keyboard(),
         )
 
@@ -632,7 +632,7 @@ def create_mood_response(mood: str) -> str:
 
     if not data:
         return (
-            "🌸 <b>Mood received</b>\n\n"
+            "🌸 Mood received\n\n"
             "Har feeling valid hai. 🫶\n"
             "Thoda breathe karo aur khud ke saath gentle raho."
         )
@@ -641,9 +641,9 @@ def create_mood_response(mood: str) -> str:
     action = random.choice(data["actions"])
 
     return (
-        f"{data['emoji']} <b>{safe(data['name'])}</b>\n\n"
+        f"{data['emoji']} {safe(data['name'])}\n\n"
         f"{safe(message)}\n\n"
-        f"🌱 <b>Tiny idea:</b>\n"
+        f"🌱 Tiny idea:\n"
         f"{safe(action)}"
     )
 
@@ -737,7 +737,7 @@ async def handle_mood_selection(
 
     await query.edit_message_text(
         text,
-        parse_mode="HTML",
+        
         reply_markup=back_keyboard(),
     )
 
@@ -792,7 +792,7 @@ async def show_quote(
 ) -> None:
 
     text = (
-        "💬 <b>Quote for you</b>\n\n"
+        "💬 Quote for you\n\n"
         f"“{safe(random.choice(QUOTES))}”"
     )
 
@@ -813,7 +813,7 @@ async def show_motivation(
 ) -> None:
 
     text = (
-        "💪 <b>A little push for you</b>\n\n"
+        "💪 A little push for you\n\n"
         f"{safe(random.choice(MOTIVATION))}"
     )
 
@@ -834,7 +834,7 @@ async def show_self_care(
 ) -> None:
 
     text = (
-        "🫶 <b>Take care of yourself</b>\n\n"
+        "🫶 Take care of yourself\n\n"
         f"{safe(random.choice(SELF_CARE))}"
     )
 
@@ -855,7 +855,7 @@ async def show_tiny_action(
 ) -> None:
 
     text = (
-        "🌱 <b>Tiny Action</b>\n\n"
+        "🌱 Tiny Action\n\n"
         f"{safe(random.choice(TINY_ACTIONS))}\n\n"
         "Bas itna sa step. ✨"
     )
@@ -877,7 +877,7 @@ async def show_comfort(
 ) -> None:
 
     text = (
-        "💖 <b>For you</b>\n\n"
+        "💖 For you\n\n"
         f"{safe(random.choice(COMFORT_MESSAGES))}"
     )
 
@@ -898,7 +898,7 @@ async def show_compliment(
 ) -> None:
 
     text = (
-        "🌷 <b>Today's little reminder</b>\n\n"
+        "🌷 Today's little reminder\n\n"
         f"{safe(random.choice(COMPLIMENTS))}"
     )
 
@@ -919,7 +919,7 @@ async def show_reflection(
 ) -> None:
 
     text = (
-        "🧠 <b>Little Reflection</b>\n\n"
+        "🧠 Little Reflection\n\n"
         f"{safe(random.choice(REFLECTION_PROMPTS))}\n\n"
         "Iska answer apne notes mein likh sakte ho. 🌸"
     )
@@ -952,7 +952,7 @@ async def show_daily_vibe(
     vibe = get_daily_vibe()
 
     text = (
-        f"<b>{safe(vibe['title'])}</b>\n\n"
+        f"{safe(vibe['title'])}\n\n"
         f"{safe(vibe['text'])}\n\n"
         "🌸 Make today count in your own way."
     )
@@ -991,7 +991,7 @@ async def show_random_bloom(
     )
 
     text = (
-        f"<b>{safe(label)}</b>\n\n"
+        f"{safe(label)}\n\n"
         f"{safe(item['text'])}"
     )
 
@@ -1030,9 +1030,9 @@ async def show_lucky_bloom(
     number = random.randint(1, 99)
 
     text = (
-        "🍀 <b>Your Lucky Bloom</b>\n\n"
+        "🍀 Your Lucky Bloom\n\n"
         f"{safe(message)}\n\n"
-        f"✨ Lucky number: <b>{number}</b>"
+        f"✨ Lucky number: {number}"
     )
 
     await edit_or_send(
@@ -1098,13 +1098,13 @@ async def quote_command(
 ) -> None:
 
     text = (
-        "💬 <b>Quote for you</b>\n\n"
+        "💬 Quote for you\n\n"
         f"“{safe(random.choice(QUOTES))}”"
     )
 
     await update.effective_message.reply_text(
         text,
-        parse_mode="HTML",
+        
     )
 
 
@@ -1118,13 +1118,13 @@ async def motivate_command(
 ) -> None:
 
     text = (
-        "💪 <b>You've got this!</b>\n\n"
+        "💪 You've got this!\n\n"
         f"{safe(random.choice(MOTIVATION))}"
     )
 
     await update.effective_message.reply_text(
         text,
-        parse_mode="HTML",
+        
     )
 
 
@@ -1138,13 +1138,13 @@ async def care_command(
 ) -> None:
 
     text = (
-        "🫶 <b>Self-Care</b>\n\n"
+        "🫶 Self-Care\n\n"
         f"{safe(random.choice(SELF_CARE))}"
     )
 
     await update.effective_message.reply_text(
         text,
-        parse_mode="HTML",
+        
     )
 
 
@@ -1160,13 +1160,13 @@ async def vibe_command(
     vibe = get_daily_vibe()
 
     text = (
-        f"<b>{safe(vibe['title'])}</b>\n\n"
+        f"{safe(vibe['title'])}\n\n"
         f"{safe(vibe['text'])}"
     )
 
     await update.effective_message.reply_text(
         text,
-        parse_mode="HTML",
+        
     )
 
 
@@ -1182,13 +1182,13 @@ async def random_command(
     item = random_bloom()
 
     text = (
-        "🎲 <b>Random Bloom</b>\n\n"
+        "🎲 Random Bloom\n\n"
         f"{safe(item['text'])}"
     )
 
     await update.effective_message.reply_text(
         text,
-        parse_mode="HTML",
+        
     )
 
 
@@ -1210,7 +1210,7 @@ async def edit_or_send(
 
         await query.edit_message_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboard,
         )
 
@@ -1218,7 +1218,7 @@ async def edit_or_send(
 
         await update.effective_message.reply_text(
             text,
-            parse_mode="HTML",
+            
             reply_markup=keyboard,
         )
 

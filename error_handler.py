@@ -1075,9 +1075,9 @@ def format_log_statistics():
         return f"{size / (1024 ** 3):.2f} GB"
 
     return (
-        "🛡️ <b>MoodBloom Error System</b>\n\n"
+        "🛡️ MoodBloom Error System\n\n"
         f"📁 Log Folder: "
-        f"<code>{stats.get('log_directory', 'Unknown')}</code>\n"
+        f"{stats.get('log_directory', 'Unknown')}\n"
         f"📄 Main Log: "
         f"{format_size(stats.get('log_size', 0))}\n"
         f"🚨 Error Log: "

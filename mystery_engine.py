@@ -45,318 +45,7 @@ def build_mystery_choices(answers):
     return choices
 
 
-MYSTERIES = [
-    {
-        "title": "Band Darwaze Ki Chabi",
-        "clues": [
-            "Room andar se locked tha.",
-            "Window par baarish ke drops the, lekin floor dry tha.",
-            "Table ke neeche ek fresh scratch mila."
-        ],
-        "answers": [
-            ("🪟 Chabi window se bahar pheki gayi", False),
-            ("👤 Koi stranger window se andar aaya", False),
-            ("🗝️ Chabi floorboard ke gap mein chhupayi gayi thi", True),
-        ],
-    },
-    {
-        "title": "Midnight Bell",
-        "clues": [
-            "Bell exactly 12 baje baji.",
-            "Rope par dust untouched thi.",
-            "Side door ke paas muddy mark tha."
-        ],
-        "answers": [
-            ("🐦 Kisi bird ne bell baja di", False),
-            ("🔔 Bell mechanism ko side passage se activate kiya gaya", True),
-            ("🌬️ Hawa ne rope kheench di", False),
-        ],
-    },
-    {
-        "title": "Gayab Diary",
-        "clues": [
-            "Diary desk par last seen hui thi.",
-            "Desk par ink ka fresh dot tha.",
-            "Bookshelf ka ek book ulta rakha tha."
-        ],
-        "answers": [
-            ("📖 Diary ulte book ke peeche chhupayi gayi", True),
-            ("🪟 Diary window se udd gayi", False),
-            ("🧹 Cleaner ne use dustbin mein daal diya", False),
-        ],
-    },
-    {
-        "title": "Chori Hui Painting",
-        "clues": [
-            "Gallery ka alarm on tha.",
-            "Frame par fingerprints nahi the.",
-            "Back wall par ek halka white mark tha."
-        ],
-        "answers": [
-            ("🚪 Thief main door se bhaaga", False),
-            ("🧽 Painting ko cleaning cloth ke saath le gaye", False),
-            ("🎨 Painting ko frame ke saath hidden panel se nikala gaya", True),
-        ],
-    },
-    {
-        "title": "Silent Phone",
-        "clues": [
-            "Phone ring hua par screen black thi.",
-            "Battery 80% thi.",
-            "Last call 2 minutes pehle hua tha."
-        ],
-        "answers": [
-            ("📡 Phone tower se disconnected tha", False),
-            ("📱 Phone silent mode par tha, call vibration se notice hua", True),
-            ("🔋 Battery fake reading de rahi thi", False),
-        ],
-    },
-    {
-        "title": "Cafe Ka Extra Cup",
-        "clues": [
-            "Cafe mein teen log aaye.",
-            "Bill mein chaar coffees likhi thi.",
-            "Fourth cup untouched tha."
-        ],
-        "answers": [
-            ("☕ Chautha cup pehle se order hua tha, kisi ka wait ho raha tha", True),
-            ("👻 Cafe mein invisible guest tha", False),
-            ("🧾 Cashier ne bill galat banaya", False),
-        ],
-    },
-    {
-        "title": "Garden Footprints",
-        "clues": [
-            "Garden mein wet footprints mile.",
-            "Footprints wrong direction mein the.",
-            "Ek flowerpot ke paas soil pressed tha."
-        ],
-        "answers": [
-            ("🌿 Footprints se sign tha ki kisi ne flowerpot mein secret box chhupa diya", True),
-            ("🧭 Footprints ka pattern hidden path ko point kar raha tha", False),
-            ("🐾 Footprints dog ke the", False),
-            ("🧱 Footprints ne gate ka direction dikhaya", False),
-        ],
-    },
-    {
-        "title": "Basement Lock",
-        "clues": [
-            "Basement door ke pair ek broken keyring mila.",
-            "Akhri kala line sirf ek hi room mein likhi thi.",
-            "Room ka fan 3 rounds piche ki taraf chala tha."
-        ],
-        "answers": [
-            ("🔒 Basement lock ka code 13-07 tha", False),
-            ("🗝️ Keyring ke tag par ek tiny star tha — yahi sign tha ki key hidden inside wall clock panel mein thi", True),
-            ("🧲 Tag par anchor symbol tha", False),
-            ("🧰 Unlocking ke liye hammer use hua", False),
-        ],
-    },
-    {
-        "title": "Mirror Room",
-        "clues": [
-            "Mirror ke front par dust nahi tha.",
-            "Back of mirror par ek thin line of oil thi.",
-            "Room mein ek small handprint wall par tha."
-        ],
-        "answers": [
-            ("🪞 Mirror se peeche hidden passage khul raha tha", True),
-            ("🧍 Mirror ko kisi ne intentionally clean kiya", False),
-            ("🛁 Room ka bathroom hidden tha", False),
-            ("🧹 Cleaner ne mirror ko move kiya", False),
-        ],
-    },
-    {
-        "title": "The Quiet Library",
-        "clues": [
-            "Shelf ka top row thoda unbalanced tha.",
-            "Dust ke ek trail ne wall seam ki taraf point kiya.",
-            "Ek book spine naya tha."
-        ],
-        "answers": [
-            ("📚 Book ke piche hidden journal chhupa tha", True),
-            ("🧹 Cleaner ne shelf ko order diya", False),
-            ("🕵️ Librarian ne book ko badal diya", False),
-            ("📖 Shelf ka top row broken tha", False),
-        ],
-    },
-]
-
-
-def _ordered_answers(context, index):
-    key = f"mb_mystery_order_{index}"
-    order = context.user_data.get(key)
-    if not order or sorted(order) != list(range(len(MYSTERIES[index]["answers"]))):
-        order = list(range(len(MYSTERIES[index]["answers"])))
-        random.shuffle(order)
-        context.user_data[key] = order
-    return order
-
-
-def _keyboard(index, context):
-    mystery = MYSTERIES[index]
-    order = _ordered_answers(context, index)
-    rows = []
-    for display_pos, original_pos in enumerate(order):
-        label, _ = mystery["answers"][original_pos]
-        rows.append([
-            InlineKeyboardButton(mask_answer_text(label), callback_data=f"mb_mystery|answer|{index}|{display_pos}")
-        ])
-    rows.append([
-        InlineKeyboardButton("🔄 New Mystery", callback_data="mb_mystery|new"),
-        InlineKeyboardButton("📚 Browse", callback_data="mb_mystery|menu|0")
-    ])
-    return InlineKeyboardMarkup(rows)
-
-
-def _menu_keyboard(page):
-    total_pages = max(1, (len(MYSTERIES) + MYSTERIES_PER_PAGE - 1) // MYSTERIES_PER_PAGE)
-    page = max(0, min(page, total_pages - 1))
-    start = page * MYSTERIES_PER_PAGE
-    rows = []
-    for index, mystery in list(enumerate(MYSTERIES))[start:start + MYSTERIES_PER_PAGE]:
-        rows.append([InlineKeyboardButton(f"🕵️ {mystery['title']}", callback_data=f"mb_mystery|open|{index}")])
-    nav = []
-    if page > 0:
-        nav.append(InlineKeyboardButton("⬅️ Prev", callback_data=f"mb_mystery|menu|{page - 1}"))
-    if page < total_pages - 1:
-        nav.append(InlineKeyboardButton("Next ➡️", callback_data=f"mb_mystery|menu|{page + 1}"))
-    if nav:
-        rows.append(nav)
-    return InlineKeyboardMarkup(rows), page, total_pages
-
-
-async def _show(update, index, context):
-    mystery = MYSTERIES[index]
-    clue_text = "\n".join(f"• {c}" for c in mystery["clues"])
-    text = (
-        f"🕵️ <b>{mystery['title']}</b>\n\n"
-        f"🔎 <b>Clues</b>\n{clue_text}\n\n"
-        "🧠 Ye clues ek hi story ko explain karni chahiye. "
-        "Har option partial answer dikh raha hai — correct theory hi complete picture banata hai."
-    )
-    markup = _keyboard(index, context)
-    if update.callback_query:
-        await update.callback_query.edit_message_text(text, parse_mode="HTML", reply_markup=markup)
-    elif update.effective_message:
-        await update.effective_message.reply_text(text, parse_mode="HTML", reply_markup=markup)
-
-
-async def _show_menu(update, page=0):
-    markup, page, total_pages = _menu_keyboard(page)
-    text = (
-        "🕵️ <b>MOODBLOOM MYSTERY ROOM</b>\n\n"
-        f"{len(MYSTERIES)} cases • clues first • answers shuffled\n"
-        "Har case mein answer position fixed nahi hai. Pattern pakdo, guess nahi.\n\n"
-        f"Page {page + 1}/{total_pages}"
-    )
-    if update.callback_query:
-        await update.callback_query.edit_message_text(text, parse_mode="HTML", reply_markup=markup)
-    elif update.effective_message:
-        await update.effective_message.reply_text(text, parse_mode="HTML", reply_markup=markup)
-
-
-async def mystery_command(update, context):
-    index = random.randrange(len(MYSTERIES))
-    context.user_data["mb_mystery_index"] = index
-    context.user_data[f"mb_mystery_order_{index}"] = random.sample(range(len(MYSTERIES[index]["answers"])), len(MYSTERIES[index]["answers"]))
-    await _show(update, index, context)
-
-
-async def handle_mystery_callback(update, context):
-    q = update.callback_query
-    if not q:
-        return
-    data = (q.data or "").split("|")
-
-    if len(data) == 2 and data[1] in {"start", "new"}:
-        await q.answer()
-        return await mystery_command(update, context)
-
-    if len(data) == 3 and data[1] == "menu":
-        await q.answer()
-        try:
-            page = int(data[2])
-        except (TypeError, ValueError):
-            page = 0
-        return await _show_menu(update, page)
-
-    if len(data) == 3 and data[1] == "open":
-        await q.answer()
-        try:
-            index = int(data[2])
-        except (TypeError, ValueError):
-            index = 0
-        index = max(0, min(index, len(MYSTERIES) - 1))
-        context.user_data["mb_mystery_index"] = index
-        context.user_data[f"mb_mystery_order_{index}"] = random.sample(range(len(MYSTERIES[index]["answers"])), len(MYSTERIES[index]["answers"]))
-        return await _show(update, index, context)
-
-    if len(data) != 4 or data[0] != "mb_mystery" or data[1] != "answer":
-        await q.answer("Mystery expire ho gaya.", show_alert=True)
-        return
-
-    try:
-        index = int(data[2])
-        display_pos = int(data[3])
-    except (TypeError, ValueError):
-        await q.answer("Mystery expire ho gaya.", show_alert=True)
-        return
-
-    if index < 0 or index >= len(MYSTERIES):
-        await q.answer("Case available nahi hai.", show_alert=True)
-        return
-    if context.user_data.get("mb_mystery_index") != index:
-        await q.answer("Pehle current case kholo.", show_alert=True)
-        return
-
-    order = _ordered_answers(context, index)
-    if display_pos < 0 or display_pos >= len(order):
-        await q.answer("Option expire ho gaya.", show_alert=True)
-        return
-
-    original_pos = order[display_pos]
-    mystery = MYSTERIES[index]
-    chosen_text, correct = mystery["answers"][original_pos]
-    await q.answer("Case solve! 🔎" if correct else "Clue match nahi hua.")
-
-    if correct:
-        text = (
-            f"🕵️ <b>{mystery['title']}</b>\n\n"
-            "✨ <b>Case Solved</b>\n\n"
-            "Tumhari theory diye gaye clues ke saath perfectly consistent hai.\n\n"
-            f"🔎 Full theory: {chosen_text}"
-        )
-    else:
-        correct_text = next(label for label, flag in mystery["answers"] if flag)
-        text = (
-            f"🕵️ <b>{mystery['title']}</b>\n\n"
-            "🔎 Ye theory saare clues ko ek saath explain nahi karti.\n\n"
-            "💡 Re-check karke deeper logic dekho.\n\n"
-            f"🧩 Hidden answer: {mask_answer_text(correct_text)}"
-        )
-
-    await q.edit_message_text(
-        text,
-        parse_mode="HTML",
-        reply_markup=InlineKeyboardMarkup([
-            [
-                InlineKeyboardButton("🔄 New Mystery", callback_data="mb_mystery|new"),
-                InlineKeyboardButton("📚 Browse", callback_data="mb_mystery|menu|0"),
-            ]
-        ]),
-    )
-
-
-def register_mystery_handlers(application):
-    return application
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
-import random
-
-MYSTERIES_PER_PAGE = 8
 MYSTERIES = [{'title': 'Band Darwaze Ki Chabi', 'clues': ['Room andar se locked tha.', 'Window par baarish ke drops the, lekin floor dry tha.', 'Table ke neeche ek fresh scratch mila.'], 'answers': [('🪟 Chabi window se bahar pheki gayi', False), ('👤 Koi stranger window se andar aaya', False), ('🗝️ Chabi floorboard ke gap mein chhupayi gayi thi', True)]}, {'title': 'Midnight Bell', 'clues': ['Bell exactly 12 baje baji.', 'Rope par dust untouched thi.', 'Side door ke paas muddy mark tha.'], 'answers': [('🐦 Kisi bird ne bell baja di', False), ('🔔 Bell mechanism ko side passage se activate kiya gaya', True), ('🌬️ Hawa ne rope kheench di', False)]}, {'title': 'Gayab Diary', 'clues': ['Diary desk par last seen hui thi.', 'Desk par ink ka fresh dot tha.', 'Bookshelf ka ek book ulta rakha tha.'], 'answers': [('📖 Diary ulte book ke peeche chhupayi gayi', True), ('🪟 Diary window se udd gayi', False), ('🧹 Cleaner ne use dustbin mein daal diya', False)]}, {'title': 'Chori Hui Painting', 'clues': ['Gallery ka alarm on tha.', 'Frame par fingerprints nahi the.', 'Back wall par ek halka white mark tha.'], 'answers': [('🚪 Thief main door se bhaaga', False), ('🧽 Painting ko cleaning cloth ke saath le gaye', False), ('🎨 Painting ko frame ke saath hidden panel se nikala gaya', True)]}, {'title': 'Silent Phone', 'clues': ['Phone ring hua par screen black thi.', 'Battery 80% thi.', 'Last call 2 minutes pehle hua tha.'], 'answers': [('📡 Phone tower se disconnected tha', False), ('📱 Phone silent mode par tha, call vibration se notice hua', True), ('🔋 Battery fake reading de rahi thi', False)]}, {'title': 'Cafe Ka Extra Cup', 'clues': ['Cafe mein teen log aaye.', 'Bill mein chaar coffees likhi thi.', 'Fourth cup untouched tha.'], 'answers': [('☕ Chautha cup pehle se order hua tha, kisi ka wait ho raha tha', True), ('👻 Cafe mein invisible guest tha', False), ('🧾 Cashier ne bill galat banaya', False)]}, {'title': 'Garden Footprints', 'clues': ['Garden mein wet footprints mile.', 'Us din rain sirf morning mein hui thi.', 'Footprints greenhouse tak gaye.'], 'answers': [('🌧️ Footprints fresh rain ne banaye', False), ('🐕 Dog ne human footprints banaye', False), ('🌿 Koi morning mein greenhouse se guzra tha', True)]}, {'title': 'Vanishing Ticket', 'clues': ['Ticket pocket mein rakha gaya tha.', 'Pocket mein koi hole nahi tha.', 'Train gate par ticket scan hua.'], 'answers': [('🧥 Ticket doosri jacket mein tha', False), ('🎫 Ticket scan hone ke baad machine ke collection slot mein chala gaya', True), ('🚆 Ticket hawa mein udd gaya', False)]}, {'title': 'Clock Jo Ruk Gayi', 'clues': ['Clock 7:15 par ruki.', 'Room temperature normal tha.', 'Clock ke peeche tiny metal piece mila.'], 'answers': [('⏰ Metal piece ne mechanism ko jam kiya', True), ('❄️ Thand se clock ruk gayi', False), ('🔋 Battery weak thi', False)]}, {'title': 'Library Ka Open Page', 'clues': ['Book closed thi.', 'Wapas aane par same page open tha.', 'Page par pencil mark fresh tha.'], 'answers': [('🌬️ Hawa ne book khol di', False), ('🧹 Cleaner ne random page khola', False), ('📚 Kisi ne bookmark ki jagah pencil chhodi', True)]}, {'title': 'Missing Ring', 'clues': ['Ring jewellery box mein thi.', 'Box locked tha.', 'Key owner ke paas thi.'], 'answers': [('🪟 Ring window se gir gayi', False), ('💍 Ring box ke false bottom mein gayi', True), ('🔑 Owner ne key kisi ko de di', False)]}, {'title': 'Blue Umbrella', 'clues': ['Umbrella stand mein ek blue umbrella tha.', 'Bahar rain ho rahi thi.', 'Umbrella ka handle wet tha.'], 'answers': [('☔ Koi abhi-abhi bahar se umbrella lekar andar aaya', True), ('💧 Umbrella kabhi use nahi hua', False), ('🪟 Window se paani handle par gira', False)]}, {'title': 'Rooftop Light', 'clues': ['Rooftop light 3 AM par on thi.', 'Switch off position mein tha.', 'Battery backup connected tha.'], 'answers': [('🌙 Moonlight se bulb glow hua', False), ('👤 Kisi ne switch remote se press kiya', False), ('💡 Automatic backup circuit ne light on ki', True)]}, {'title': 'Locked Drawer', 'clues': ['Drawer locked tha.', 'Key drawer ke paas hi mili.', 'Dust sirf key ke around disturbed thi.'], 'answers': [('🪟 Key window se aayi', False), ('🗝️ Key recently wahi rakhi gayi thi', True), ('🧹 Dust cleaner ne disturb ki', False)]}, {'title': 'Empty Envelope', 'clues': ['Envelope sealed tha.', 'Andar paper nahi tha.', 'Seal par fresh glue tha.'], 'answers': [('✉️ Envelope ko reseal karke paper nikaal diya gaya', True), ('🌬️ Paper seal ke through udd gaya', False), ('📮 Post office ne paper remove kiya', False)]}, {'title': 'Footstep on Stairs', 'clues': ['Ek wet footprint stair ke third step par tha.', 'Neeche floor dry tha.', 'Top floor ka window open tha.'], 'answers': [('🌧️ Rain seedha stairs par hui', False), ('🐾 Animal ne footprint banaya', False), ('🪟 Paani window se shoe par laga aur footprint bana', True)]}, {'title': 'Lost Bracelet', 'clues': ['Bracelet bedroom mein last seen tha.', 'Bed ke neeche nahi mila.', 'Curtain ka bottom wet tha.'], 'answers': [('🚪 Guest le gaya', False), ('🪟 Bracelet curtain ke fold mein atak gaya', True), ('🧺 Laundry mein chala gaya', False)]}, {'title': 'The Warm Cup', 'clues': ['Cup table par warm tha.', 'Room empty tha.', 'Kettle cold thi.'], 'answers': [('☕ Cup kisi ne pehle hi garam karke rakha tha', True), ('🔥 Cup khud garam hua', False), ('🌞 Sunlight ne cup boil kar diya', False)]}, {'title': 'Secret Locker', 'clues': ['Locker number visible nahi tha.', 'Keychain par 3 numbers likhe the.', 'Nearby wall par same numbers scratched the.'], 'answers': [('🔢 Numbers phone number the', False), ('🗺️ Numbers random decoration the', False), ('🔐 Wall ke numbers locker code ka clue the', True)]}, {'title': 'Red Ribbon', 'clues': ['Ribbon gate par bandhi thi.', 'Wind strong thi.', 'Knot tight tha.'], 'answers': [('🐦 Bird ne ribbon baandhi', False), ('🎀 Ribbon kisi ne intentionally clue ke liye bandhi', True), ('🌬️ Wind ne perfect knot bana diya', False)]}, {'title': 'Missing Spoon', 'clues': ['Kitchen mein 11 spoons the.', 'Dinner ke baad 10 mile.', 'Sink dry tha.'], 'answers': [('🥄 Spoon dining tray ke neeche reh gayi', True), ('🧼 Spoon sink mein chhup gayi', False), ('👤 Guest spoon ghar le gaya', False)]}, {'title': 'Old Photograph', 'clues': ['Photo frame mein thi.', 'Back side par fresh date likhi thi.', 'Frame dusty tha.'], 'answers': [('🌫️ Dust ne date bana di', False), ('🖊️ Old ink suddenly fresh ho gayi', False), ('📸 Photo recently frame se nikali aur wapas rakhi gayi', True)]}, {'title': 'Garden Gate', 'clues': ['Gate locked tha.', 'Lock par scratches the.', 'Key gardener ke pocket mein thi.'], 'answers': [('🌧️ Rain ne scratches banaye', False), ('🔑 Gate ko key se kholne ki koshish hui', True), ('🐦 Bird ne lock scratch kiya', False)]}, {'title': 'Whispering Room', 'clues': ['Room mein faint humming sound thi.', 'Fan off tha.', 'Ventilation duct open tha.'], 'answers': [('🎵 Sound duct ke doosre room se aa rahi thi', True), ('🌬️ Fan off hoke bhi sound bana raha tha', False), ('👻 Walls khud ga rahi thi', False)]}, {'title': 'Broken Vase', 'clues': ['Vase floor par broken tha.', 'Window closed thi.', 'Table edge par water ring thi.'], 'answers': [('🪟 Window se hawa ne vase toda', False), ('🐈 Cat ne vase tod diya', False), ('💧 Water ring se pata chala vase wet surface par slide hua', True)]}, {'title': 'Two Keys', 'clues': ['Do keys same dikh rahi thi.', 'Ek key par tiny blue mark tha.', 'Lock sirf ek key se khula.'], 'answers': [('🎨 Blue mark sirf decoration tha', False), ('🗝️ Blue mark wali key correct lock ki thi', True), ('🔑 Dono keys exactly same function ki thi', False)]}, {'title': 'Hidden Note', 'clues': ['Note book ke andar tha.', 'Book library se issue hui thi.', 'Note par return date se ek din pehle ki date thi.'], 'answers': [('📝 Note reader ne book return se pehle chhoda', True), ('📚 Librarian ne printing mistake ki', False), ('🌧️ Rain ne note par date bana di', False)]}, {'title': 'Cold Candle', 'clues': ['Candle recently bujhi thi.', 'Room mein koi matchstick nahi thi.', 'Window closed thi.'], 'answers': [('🌬️ Closed room mein hawa ne candle bujhai', False), ('❄️ Candle khud cold ho gayi', False), ('🕯️ Candle ko lighter se jalaya gaya hoga, matchstick zaroori nahi', True)]}, {'title': 'The Last Parcel', 'clues': ['Parcel doorstep par tha.', 'Delivery slip signed thi.', 'Ghar ka door locked tha.'], 'answers': [('📮 Postbox ne parcel deliver kiya', False), ('📦 Parcel kisi ne receive karke doorstep par rakh diya', True), ('🚪 Locked door ne parcel bahar bheja', False)]}, {'title': 'Aakhri Train Ka Signal', 'clues': ['Signal green tha, lekin train platform par nahi aayi.', 'Signal room mein lever neutral tha.', 'Track ke paas maintenance trolley mili.'], 'answers': [('🚦 Temporary maintenance block ki wajah se train ko doosre track par divert kiya gaya', True), ('🌙 Moonlight ne signal ko green kar diya', False), ('🐦 Bird ne signal lever move kar diya', False)]}, {'title': 'Gayab Chabi', 'clues': ['Locked study se ek brass ki chabi gayab ho gayi.', 'Window andar se band thi.', 'Bookshelf ke paas ek geela footprint mila.', 'Housekeeper kehti hai ki woh andar gayi hi nahi.'], 'answers': [('🪟 Chabi band window se bahar phenki gayi thi', False), ('🚶 Bahar se kisi stranger ne chabi le li', False), ('🔑 Chabi bookshelf ke peeche chhupayi gayi thi', True)], 'legacy_source': {'title': 'The Missing Key', 'clues': ['A brass key vanished from a locked study.', 'The window was closed from inside.', 'A wet footprint was found near the bookshelf.', 'The housekeeper says she never entered.'], 'answers': [('🔑 The key was hidden behind the bookshelf', True), ('🪟 It was thrown through the closed window', False), ('🚶 A stranger took it from outside', False)]}}, {'title': 'Khamosh Ghanti', 'clues': ['Town ki bell aadhi raat ko baji.', 'Kisi ne uski rope nahi kheechi.', 'Floor dusty tha, bas ek fresh mark dikha.', 'Side door recently khola gaya tha.'], 'answers': [('⏰ Tooti hui clock ne bell baja di', False), ('🔔 Kisi ne side door se andar jaakar bell bajayi', True), ('☀️ Sunlight ki wajah se bell baj gayi', False)], 'legacy_source': {'title': 'The Silent Bell', 'clues': ['The town bell rang at midnight.', 'Nobody pulled its rope.', 'The floor was dusty except for one fresh mark.', 'A side door had recently been opened.'], 'answers': [('🔔 Someone used the side door to reach the bell', True), ('☀️ Sunlight made the bell ring', False), ('⏰ A broken clock rang it', False)]}}, {'title': 'Gayab Khat', 'clues': ['Desk se ek sealed letter gayab ho gaya.', 'Envelope table par hi pada raha.', 'Room mein koi second exit nahi tha.', 'Desk lamp abhi bhi warm tha.'], 'answers': [('💌 Letter nikala gaya, lekin envelope wahi reh gaya', True), ('🧱 Letter wall ke paar chala gaya', False), ('💨 Hawa sealed envelope ko uda le gayi', False)], 'legacy_source': {'title': 'The Vanishing Letter', 'clues': ['A sealed letter disappeared from a desk.', 'The envelope remained on the table.', 'There was no second exit.', 'The desk lamp was still warm.'], 'answers': [('💌 The letter was removed while the envelope stayed', True), ('🧱 The letter passed through the wall', False), ('💨 Wind carried the sealed envelope away', False)]}}, {'title': 'Band Greenhouse', 'clues': ['Ek rare orchid raat bhar mein gayab ho gaya.', 'Greenhouse ka door andar se locked tha.', 'Roof ke paas ek chhota vent open tha.', 'Gardener ki ladder halki si geeli thi.'], 'answers': [('🔒 Door lock apne aap fail ho gaya', False), ('🌧️ Baarish orchid ko baha le gayi', False), ('🪜 Kisi ne roof vent se andar climb kiya', True)], 'legacy_source': {'title': 'The Locked Greenhouse', 'clues': ['A rare orchid disappeared overnight.', 'The greenhouse door was locked from inside.', 'A small vent near the roof was left open.', "The gardener's ladder was slightly damp."], 'answers': [('🪜 Someone climbed in through the roof vent', True), ('🔒 The door lock simply failed on its own', False), ('🌧️ Rain washed the orchid away', False)]}}, {'title': 'Khali Frame', 'clues': ['Ek painting gayab thi, sirf empty frame bacha.', 'Frame ke hooks bilkul untouched the.', 'Paas mein turpentine ki halki smell thi.', 'Museum guard ne raat mein kuch unusual nahi dekha.'], 'answers': [('🔥 Painting bina ash chhode jal gayi', False), ('🖼️ Canvas ko carefully cut karke roll kar diya gaya', True), ('👻 Painting bas apne aap fade ho gayi', False)], 'legacy_source': {'title': 'The Empty Frame', 'clues': ['A painting vanished, leaving only its empty frame.', "The frame's hooks were untouched.", 'A faint smell of turpentine lingered nearby.', "The museum's night guard reported nothing unusual."], 'answers': [('🖼️ The canvas was carefully cut out and rolled up', True), ('👻 The painting simply faded away', False), ('🔥 It burned without leaving any ash', False)]}}, {'title': 'Aadhi Raat Ka Piano', 'clues': ['Raat 2 baje empty hall se piano bajne ki awaaz aayi.', 'Us raat kisi ke paas hall ki key nahi thi.', 'Piano bench baad mein neatly andar pushed thi.', 'Piano ke paas wali window unlatched thi.'], 'answers': [('🎹 Kisi ne unlatched window se enter karke piano bajaya', True), ('👻 Piano khud hi baj raha tha', False), ('📻 Radio ki awaaz ko piano samajh liya gaya', False)], 'legacy_source': {'title': 'The Midnight Piano', 'clues': ['A piano was heard playing at 2 a.m. in an empty hall.', 'No one had a key to the hall that night.', 'The piano bench was pushed in neatly afterward.', 'A window near the piano was unlatched.'], 'answers': [('🎹 Someone entered through the unlatched window to play', True), ('👻 The piano played entirely on its own', False), ('📻 A radio was mistaken for the piano', False)]}}, {'title': 'Jama Hua Fountain', 'clues': ['Mild weather ke bawajood garden fountain raat mein poora freeze ho gaya.', 'Paas mein ek disconnected hose pada tha.', 'Fountain ke around footprints do baar ghoom rahe the.', 'Neighbor ne dawn se pehle ek truck idle suna tha.'], 'answers': [('❄️ Sirf fountain ke paas weather mysteriously cold ho gaya', False), ('🧊 Kisi ne raat mein fountain mein ice cubes bhar diye', False), ('🚛 Delivery truck ki ice machine ka paani fountain par leak hua', True)], 'legacy_source': {'title': 'The Frozen Fountain', 'clues': ['A garden fountain froze solid overnight in mild weather.', 'A hose lay disconnected nearby.', 'Footprints circled the fountain twice.', 'A neighbor mentioned hearing a truck idling before dawn.'], 'answers': [("🚛 A delivery truck's ice machine leaked onto the fountain", True), ('❄️ The weather mysteriously dropped only around the fountain', False), ('🧊 Someone filled it with ice cubes by hand overnight', False)]}}, {'title': 'Phata Hua Map', 'clues': ['Ek purana treasure map aadha phata hua mila.', 'Dono halves same drawer mein the.', 'Ek half par fresh coffee stain tha.', 'Doosra half thoda sun-faded tha.'], 'answers': [('🔥 Candle ne map ko do pieces mein jala diya', False), ('☕ Dono halves ko alag time par do logon ne handle kiya', True), ('🌊 Paani ne map ko do tukdon mein phaad diya', False)], 'legacy_source': {'title': 'The Torn Map', 'clues': ['An old treasure map was found torn in half.', 'Both halves were in the same drawer.', 'One half had a fresh coffee stain.', 'The other half was slightly sun-faded.'], 'answers': [('☕ Two different people handled each half at different times', True), ('🌊 Water tore the map apart', False), ('🔥 A candle burned it into two pieces', False)]}}, {'title': 'Khamosh Alarm', 'clues': ['Break-in ke waqt shop alarm nahi baja.', 'Wiring untouched lag rahi thi.', 'Shopkeeper ne recently code change kiya tha.', 'Ek cleaning crew previous day aayi thi.'], 'answers': [('🧹 Cleaning crew se alarm accidentally disable ho gaya', True), ('🔋 Usi moment alarm ki battery dead ho gayi', False), ('🛰️ Satellite glitch ne alarm ko silent kar diya', False)], 'legacy_source': {'title': 'The Silent Alarm', 'clues': ["A shop alarm didn't go off during a break-in.", 'The wiring looked untouched.', 'The shopkeeper had changed the code recently.', 'A cleaning crew had visited the day before.'], 'answers': [('🧹 The cleaning crew accidentally disabled the alarm', True), ("🔋 The alarm's battery died at the exact same moment", False), ('🛰️ A satellite glitch silenced the alarm', False)]}}, {'title': 'Gayab Recipe', 'clues': ['Kitchen se family ki prized recipe card gayab ho gayi.', 'Recipe box locked hi tha.', 'Grandchild weekend par visit karke gaya tha.', 'Photocopy machine ki power light abhi warm thi.'], 'answers': [('🐭 Mouse card ko utha kar le gaya', False), ('💨 Hawa ne locked box se card bahar uda diya', False), ('📠 Grandchild ne recipe copy karke original ko kahin aur rakh diya', True)], 'legacy_source': {'title': 'The Missing Recipe', 'clues': ['A prized family recipe card disappeared from the kitchen.', 'The recipe box was still locked.', 'A grandchild had visited for the weekend.', "A photocopy machine's power light was still warm."], 'answers': [('📠 The grandchild copied it and put the original elsewhere', True), ('🐭 A mouse carried the card away', False), ('💨 A gust of wind blew it out of a locked box', False)]}}, {'title': 'Toota Compass', 'clues': ['Ship ka compass achanak north ki taraf point karna band kar gaya.', 'Captain ke cabin ke paas needle wildly spin kar rahi thi.', 'Neeche deck par ek naya metal chest rakha gaya tha.', 'Deck par compass bilkul theek kaam kar raha tha.'], 'answers': [('🌊 Saltwater ne compass ko permanently confuse kar diya', False), ('🧲 Metal chest compass ko magnetically disturb kar raha tha', True), ('👻 Ship cursed thi', False)], 'legacy_source': {'title': 'The Broken Compass', 'clues': ["A ship's compass suddenly stopped pointing north.", "The needle spun wildly near the captain's cabin.", 'A new metal chest had just been stored below deck.', 'The compass worked fine on deck.'], 'answers': [('🧲 The metal chest was magnetically interfering with it', True), ('👻 The ship was cursed', False), ('🌊 Saltwater confused the compass permanently', False)]}}, {'title': 'Anjaana Mehmaan', 'clues': ['Dinner party mein invited guests se ek plate zyada use hui.', 'Poore evening saare doors locked the.', 'Ek late RSVP bhool diya gaya tha.', 'Extra plate par bahut kam khana liya gaya tha.'], 'answers': [('📋 Ek bhoola hua guest late aaya aur jaldi quietly chala gaya', True), ('👻 Dinner mein ek ghost bhi aa gaya', False), ('🧮 Host ne plates count karne mein mistake ki', False)], 'legacy_source': {'title': 'The Uninvited Guest', 'clues': ['A dinner party had one more plate used than guests invited.', 'All doors were locked all evening.', 'A late RSVP had been forgotten about.', 'The extra plate had barely been touched.'], 'answers': [('📋 A forgotten guest arrived after all and quietly left early', True), ('👻 A ghost joined the dinner', False), ('🧮 The host simply miscounted the plates', False)]}}, {'title': 'Dhundhli Photo', 'clues': ['Ek old photograph ek week mein dheere-dheere apna color kho gayi.', 'Photo sunny windowsill par rakhi thi.', 'Paas ki doosri photos bilkul unaffected thi.', 'Ye hi photo old paper stock par printed thi.'], 'answers': [('👻 Spirit ne photo ki memory erase kar di', False), ('🌡️ Sirf room temperature ne photo ko fade kar diya', False), ('☀️ Sunlight ne sensitive old paper ko fade kar diya', True)], 'legacy_source': {'title': 'The Faded Photograph', 'clues': ['An old photograph slowly lost all its color over a week.', 'It was kept on a sunny windowsill.', 'Other nearby photos were unaffected.', 'It was the only one printed on older paper stock.'], 'answers': [('☀️ Sunlight faded the older, more sensitive paper stock', True), ('👻 A spirit erased the memory from the photo', False), ('🌡️ Room temperature alone caused it to fade', False)]}}, {'title': 'Chori Hui Dhun', 'clues': ['Composer ki unfinished tune notebook se gayab ho gayi.', 'Studio ki window ajar thi.', 'Ek student suspiciously similar tune hum kar raha tha.', 'Notebook page neatly torn tha, ripped nahi.'], 'answers': [('📖 Notebook page raat mein dissolve ho gaya', False), ('🎵 Student ne tune copy karke page cleanly tear kar liya', True), ('🌬️ Hawa melody ko uda le gayi', False)], 'legacy_source': {'title': 'The Stolen Melody', 'clues': ["A composer's unfinished tune vanished from her notebook.", 'Her studio window was left ajar.', 'A student had been humming a suspiciously similar tune.', 'The notebook page was neatly torn, not ripped.'], 'answers': [('🎵 The student copied and tore the page out cleanly', True), ('🌬️ Wind carried the melody away', False), ('📖 The notebook page dissolved overnight', False)]}}, {'title': 'Band Diary', 'clues': ['Diary open mili, lekin uska lock intact tha.', 'Chhoti key apni usual hook par hi thi.', 'Diary ke paas ek hairpin mila.', 'Diary ke back cover mein loose stitch tha.'], 'answers': [('📌 Kisi ne hairpin se lock pick kiya', True), ('🔑 Kisi unknown spare key ka use hua', False), ('🧵 Loose stitch ki wajah se lock khul gaya', False)], 'legacy_source': {'title': 'The Locked Diary', 'clues': ['A diary was found open despite its lock being intact.', 'The tiny key was still on its usual hook.', 'A hairpin was found near the diary.', "The diary's back cover had a loose stitch."], 'answers': [('📌 Someone picked the lock using the hairpin', True), ('🔑 A spare key nobody knew about was used', False), ('🧵 The lock opened itself from the loose stitch', False)]}}, {'title': 'Ulta Chessboard', 'clues': ['Mid-game chessboard overturned mila.', 'Ek player ka king bilkul missing tha.', 'Thodi der pehle table ke paas ek cat dekhi gayi thi.', 'Missing king baad mein cushion ke neeche mila.'], 'answers': [('😡 Gusse mein player ne board tod diya', False), ('👻 Board apne aap flip ho gaya', False), ('🐈 Cat ne board gira diya aur king ko le gayi', True)], 'legacy_source': {'title': 'The Overturned Chessboard', 'clues': ["A chess match's board was found overturned mid-game.", "One player's king was missing entirely.", 'A cat had been seen near the table earlier.', 'The missing king was later found under a cushion.'], 'answers': [('🐈 The cat knocked the board and carried off the king', True), ('😡 A furious player smashed the board', False), ('👻 The board flipped itself', False)]}}, {'title': 'Gayab Saaya', 'clues': ['Streetlamp ke neeche ek passerby ka shadow nahi dikh raha tha.', 'Shaam foggy aur overcast thi.', 'Do nearby lamps normally kaam kar rahe the.', 'Shadowless lamp ka cover cracked aur diffusing tha.'], 'answers': [('🌫️ Fog ne sirf us lamp ke neeche shadow erase kar diya', False), ('💡 Cracked cover ne light scatter karke shadow ko hide kar diya', True), ('👻 Passerby ka sach mein koi shadow nahi tha', False)], 'legacy_source': {'title': 'The Missing Shadow', 'clues': ['A streetlamp seemed to cast no shadow for a passerby.', 'It was a foggy, overcast evening.', 'Two other lamps nearby worked normally.', "The 'shadowless' lamp had a cracked, diffusing cover."], 'answers': [('💡 The cracked cover scattered light evenly, hiding the shadow', True), ('👻 The passerby had no shadow at all', False), ('🌫️ Fog erased shadows only under that lamp', False)]}}, {'title': 'Band Lifafa', 'clues': ['Ek sealed envelope jaise kal ka weather pehle se jaanta tha.', 'Woh ek week pehle seal kiya gaya tha.', 'Sender weather station mein kaam karta tha.', 'Andar exact forecast nahi, broad seasonal forecast tha.'], 'answers': [('🌦️ Ye broad seasonal prediction thi, exact prediction nahi', True), ('🔮 Sender future dekh sakta tha', False), ('📡 Envelope khud live weather updates receive karta tha', False)], 'legacy_source': {'title': 'The Sealed Envelope', 'clues': ["A sealed envelope somehow already knew tomorrow's weather.", 'It had been sealed a week in advance.', 'The sender worked at a weather station.', 'The envelope contained a general seasonal forecast, not a precise one.'], 'answers': [('🌦️ It was a broad seasonal prediction, not an exact one', True), ('🔮 The sender could genuinely see the future', False), ('📡 The envelope received live weather updates by itself', False)]}}, {'title': 'Khali Pinjra', 'clues': ['Closed cage se pet bird raat bhar mein gayab ho gaya.', 'Cage door abhi bhi latched tha.', 'Do bars ke beech ek chhota gap bent lag raha tha.', 'Bird seed cage ke bahar bikhra hua tha.'], 'answers': [('👻 Bird closed door ke paar chala gaya', False), ('🐍 Snake ne latch ke through bird ko kha liya', False), ('🐦 Bird bent bars ke gap se nikal gaya', True)], 'legacy_source': {'title': 'The Empty Birdcage', 'clues': ['A pet bird vanished from a closed cage overnight.', 'The cage door was still latched shut.', 'A small gap between two bars looked slightly bent.', 'Bird seed was scattered just outside the cage.'], 'answers': [('🐦 The bird squeezed through the slightly bent bars', True), ('👻 The bird passed through the closed door', False), ('🐍 A snake ate the bird whole through the latch', False)]}}, {'title': 'Gayab Painter', 'clues': ['Street painter mural ke beech gayab ho gaya, brush abhi wet tha.', 'Uske supplies neatly stacked the.', 'Kuch minutes pehle ek delivery van paas ruki thi.', "Baad mein note mila: 'Family emergency, back soon.'"], 'answers': [('🛸 Painter ko mysteriously abduct kar liya gaya', False), ('📝 Painter family emergency ke liye suddenly chala gaya', True), ('👻 Painter apne mural ke andar dissolve ho gaya', False)], 'legacy_source': {'title': 'The Vanishing Painter', 'clues': ['A street painter disappeared mid-mural, brush still wet.', 'Their supplies were left neatly stacked.', 'A delivery van had stopped nearby minutes earlier.', "A note was later found saying 'Family emergency, back soon.'"], 'answers': [('📝 They left suddenly for a family emergency, as the note says', True), ('👻 The painter dissolved into their own mural', False), ('🛸 The painter was mysteriously abducted', False)]}}, {'title': 'Toota Aaina', 'clues': ['Antique mirror ke paas koi nahi tha, phir bhi woh crack ho gaya.', 'Kuch minutes pehle street par loud truck guzra tha.', 'Mirror ke peeche old, brittle plaster tha.', 'Nearby similar mirrors mein bhi hairline cracks the.'], 'answers': [('🚛 Truck vibrations ne old mirror mounting ko crack kar diya', True), ('👻 Curse ki wajah se mirror crack hua', False), ('🌡️ Sudden temperature swing ne mirror tod diya', False)], 'legacy_source': {'title': 'The Cracked Mirror', 'clues': ['An antique mirror cracked with no one near it.', 'A loud truck had passed on the street minutes before.', 'The wall behind it had old, brittle plaster.', 'Similar mirrors nearby had tiny hairline cracks too.'], 'answers': [('🚛 Truck vibrations cracked the old, brittle-mounted mirror', True), ('👻 The mirror cracked itself from a curse', False), ('🌡️ A sudden temperature swing shattered it instantly', False)]}}, {'title': 'Khamosh Phone Call', 'clues': ['Phone ek baar ring hua aur answer hone se pehle silent ho gaya.', 'Call log mein missed call bhi nahi tha.', 'Us raat area mein storm aaya tha.', 'Neighbor ka landline bhi briefly ring hua.'], 'answers': [('👻 Ghost call kar raha tha', False), ('🔮 Ye psychic premonition thi', False), ('⚡ Lightning-related electrical surge se dono phones ring hue', True)], 'legacy_source': {'title': 'The Silent Phone Call', 'clues': ['A phone rang once and went silent before anyone answered.', 'No missed call appeared in the call log.', 'A storm had rolled through the area that night.', "A neighbor's landline had also rung briefly."], 'answers': [('⚡ A lightning-related electrical surge caused both phones to ring', True), ('👻 A ghost was trying to call', False), ('🔮 It was a psychic premonition', False)]}}, {'title': 'Gayab Hoti Ink', 'clues': ['Signed contract ki ink ek din ke andar bilkul fade ho gayi.', 'Contract prankster friend se borrowed pen se sign hua tha.', 'Doosre pen se signed documents safe rahe.', 'Prankster ne recently joke-shop pen set kharida tha.'], 'answers': [('☀️ Sunlight ne sirf us signature ko erase kiya', False), ('🖊️ Borrowed pen novelty disappearing-ink pen tha', True), ('👻 Contract ke terms cursed the', False)], 'legacy_source': {'title': 'The Disappearing Ink', 'clues': ["A signed contract's ink faded to nothing within a day.", 'It had been signed with a pen borrowed from a prankster friend.', 'Other documents signed with a different pen stayed intact.', 'The prankster had recently bought a joke-shop pen set.'], 'answers': [('🖊️ The borrowed pen was a novelty disappearing-ink pen', True), ("👻 The contract's terms were cursed", False), ('☀️ Sunlight alone erased only that signature', False)]}}, {'title': 'Ghoomti Murti', 'clues': ['Garden statue har morning alag direction mein face karti mili.', 'Base par fresh scrape marks the.', 'Gardener ke teenage kids ki nightly prank war chal rahi thi.', 'Ek sibling ke shoes par same stone dust thi.'], 'answers': [('👟 Sibling har raat secretly statue rotate karta tha', True), ('👻 Statue raat mein zinda ho jaati thi', False), ('🌪️ Wind ne heavy stone statue ko rotate kar diya', False)], 'legacy_source': {'title': 'The Wandering Statue', 'clues': ['A garden statue was found facing a different direction each morning.', 'Its base showed fresh scrape marks.', "The gardener's teenage kids had been having a nightly prank war.", "One sibling's shoes had matching stone dust on the soles."], 'answers': [('👟 A sibling was secretly rotating it each night as a prank', True), ('👻 The statue came alive at night', False), ('🌪️ Wind alone rotated the heavy stone statue', False)]}}, {'title': 'Gungunati Deewar', 'clues': ['Tenants ko apartment wall se halki humming sunayi deti thi.', 'Us wall section mein wiring nahi thi.', 'Peeche ek old unused water pipe tha.', 'Building ka water pressure recently badha tha.'], 'answers': [('👻 Wall ke andar supernatural cheez thi', False), ('🐝 Wall ke andar hidden beehive humming kar raha tha', False), ('🚿 Increased water pressure se old pipe vibrate kar raha tha', True)], 'legacy_source': {'title': 'The Humming Wall', 'clues': ['Tenants reported a faint humming from an apartment wall.', 'No wiring ran through that section of wall.', 'An old, unused water pipe ran behind it instead.', "The building's water pressure had recently increased."], 'answers': [('🚿 Increased water pressure made the old pipe vibrate audibly', True), ('👻 Something supernatural lived in the wall', False), ('🐝 A hidden beehive was humming inside the wall', False)]}}, {'title': 'Room 404 Ka Missing Minute', 'clues': ['Building CCTV 10:11 par normal hai.', '10:12 ka frame missing hai.', 'Lift log mein 10:12 par 4th floor request hai.', '4th floor ka corridor camera 10:13 se chalu hota hai.'], 'answers': [('🔑 Camera reset hua tha aur missing minute lift maintenance ke waqt create hua', True), ('👻 Room 404 ne ek minute ko absorb kar liya', False), ('🕰️ Building clock ne time travel karke frame delete kiya', False)], 'difficulty': 'hard'}, {'title': 'Museum Ki Do Chabiyan', 'clues': ['Display case double-lock tha.', 'Ek key curator ke paas, doosri sealed envelope mein thi.', 'Envelope ki seal intact thi.', 'Case open mila par dono locks damaged nahi the.'], 'answers': [('🕵️ Visitor ne duplicate keys bana kar lock tod diya', False), ('🧲 Internal release mechanism se case khula, keys use nahi hui', True), ('🗝️ Curator ne dono keys ek saath use ki', False)], 'difficulty': 'hard'}, {'title': 'Blue Ink Wala Witness', 'clues': ['Witness ne statement blue ink se sign ki.', 'Office ke blue pen ka ink same tha.', 'Statement par ink age fresh thi.', 'CCTV mein witness ne red pen use kiya tha.'], 'answers': [('🔵 Blue pen hi camera mein hidden tha', False), ('🧴 Ink ne pen ka color badal diya', False), ('📝 Statement baad mein rewrite ya sign ki gayi; CCTV pen use match nahi karta', True)], 'difficulty': 'hard'}, {'title': 'Hotel Room Ka Cold Cup', 'clues': ['Cup table par thanda tha.', 'Room service 15 min pehle deliver hui thi.', 'Window open thi.', 'Curtain ke neeche wet footprints nahi the.'], 'answers': [('🪟 Open window ki cold air se drink rapidly cool hui', True), ('🧊 Cup freezer mein rakha gaya tha', False), ('👻 Room mein invisible guest ne cup thanda kiya', False)], 'difficulty': 'hard'}, {'title': 'Clock Tower Ka Extra Strike', 'clues': ['Tower bell 8 baar bajni chahiye thi.', 'Log mein 9 strikes record hui.', 'Mechanism inspection mein normal tha.', 'Nearby church bell 9 baar baji thi.'], 'answers': [('🌩️ Lightning ne bell ko manually count karwaya', False), ('🔔 Sound overlap ne church bell ki ek extra strike ko tower recording mein include kiya', True), ('⚙️ Tower mechanism ne random extra strike ki', False)], 'difficulty': 'hard'}, {'title': 'Library Book Ka Fake Return', 'clues': ['Book issue record mein 2 PM return dikhta hai.', 'CCTV 1:55–2:05 available hai.', 'Koi person return desk tak nahi gaya.', 'Desk scanner 2 PM par beep karta hai.'], 'answers': [('🧑\u200d💼 Librarian ne invisible shortcut liya', False), ('📖 Book khud desk par walk karke aayi', False), ('📚 Scanner event automated shelf-sync tha, physical return nahi', True)], 'difficulty': 'hard'}, {'title': 'Jewellery Box Without Fingerprints', 'clues': ['Box par fingerprints nahi the.', 'Dust lid par undisturbed thi.', 'Box ke base par fresh adhesive marks the.', 'Jewellery missing thi.'], 'answers': [('🧲 Box ka upper lid replace karke jewellery transfer ki gayi, isliye old surface untouched raha', True), ('🧤 Thief ne magic gloves use kiye', False), ('🌬️ Air pressure ne jewellery box se items nikaal diye', False)], 'difficulty': 'hard'}, {'title': 'Train Seat 17 Ka Secret', 'clues': ['Seat 17 reserved thi.', 'Passenger list mein naam tha.', 'Conductor ke scan mein ticket valid tha.', 'Passenger ke phone location train se bahar dikhi.'], 'answers': [('🎟️ Ticket printer ne passenger create kar diya', False), ('📱 Ticket kisi aur device/account se validly scanned hua; listed passenger train mein hona prove nahi hota', True), ('🚆 Train ne passenger ko teleport kar diya', False)], 'difficulty': 'hard'}, {'title': 'Hospital Corridor Ka 7-Minute Gap', 'clues': ['Nurse log 11:20 par round complete dikhata hai.', 'CCTV 11:20–11:27 blank hai.', 'Power supply uninterrupted thi.', 'Backup camera 11:27 se active hai.'], 'answers': [('⚡ Puri building ki power 7 minute gayi thi', False), ('👻 Corridor mein time stop ho gaya', False), ('📹 Camera system ka local recording segment fail hua, power outage zaroori nahi', True)], 'difficulty': 'hard'}, {'title': 'Garden Fountain Ka Reverse Ripple', 'clues': ['Fountain pump off tha.', 'Water surface par ripples center ki taraf ja rahe the.', 'Nearby sprinkler 30 seconds pehle chala tha.', 'Bowl ka center slightly lower tha.'], 'answers': [('💧 Sprinkler water flow bowl ke center depression ki taraf drain ho raha tha', True), ('🔄 Fountain pump secretly reverse mode mein tha', False), ('🌬️ Hawa ne ripples ko center ki taraf push kiya', False)], 'difficulty': 'hard'}, {'title': 'Old Diary Ka Doosra Date', 'clues': ['Diary page par 14 June likha hai.', 'Ink pressure page ke neeche bhi visible hai.', 'Previous page 12 June hai.', 'Calendar ke according 13 June page missing hai.'], 'answers': [('🪄 Date automatically jump hua', False), ('📖 Missing 13 June page remove hui thi; 14 June ka date sequence natural hai', True), ('⏳ Diary writer ne 14 June ko 12 June ke baad immediately likha without a missing page', False)], 'difficulty': 'hard'}, {'title': 'Café Window Ka Shadow', 'clues': ['Café band tha.', 'Inside table par chair moved thi.', 'Window locked thi.', 'Streetlight flicker log 1:02 par hai.'], 'answers': [('👤 Shadow ne chair move ki', False), ('🪟 Locked window se person andar aaya', False), ('💡 Streetlight flicker se moving shadow effect bana, chair movement ka separate evidence chahiye', True)], 'difficulty': 'hard'}, {'title': 'Museum Statue Ki Wet Base', 'clues': ['Statue dry thi.', 'Base wet thi.', 'Cleaning log 20 min pehle ka tha.', 'Floor dry tha.'], 'answers': [('🧽 Cleaning water base ke uneven joint mein collect hua, statue wet hona zaroori nahi', True), ('🌧️ Statue par rain hui thi', False), ('💦 Statue ne khud water release kiya', False)], 'difficulty': 'hard'}, {'title': 'Office Printer Ka Hidden Page', 'clues': ['Printer queue empty thi.', 'Tray mein one extra page tha.', 'Page par same document header tha.', 'Printer logs mein last job 30 min pehle thi.'], 'answers': [('📄 Paper tray ne document khud generate kiya', False), ('🖨️ Extra page previous job ka duplicate/output remainder ho sakta hai; empty current queue is consistent', True), ('👻 Printer ne future document print kiya', False)], 'difficulty': 'hard'}, {'title': 'Locked Cabin Ka Warm Handle', 'clues': ['Cabin locked tha.', 'Handle warm tha.', 'Window open thi.', 'Cabin heater off tha.'], 'answers': [('🔥 Heater hidden wall mein on tha', False), ('🖐️ Kisi ne just cabin se exit kiya tha', False), ('☀️ Direct sunlight ya warm airflow handle ko warm kar sakta hai; warm handle alone occupancy prove nahi karta', True)], 'difficulty': 'hard'}, {'title': 'River Boat Ka Missing Oar', 'clues': ['Boat shore par tied thi.', 'Ek oar missing thi.', 'Rope intact thi.', 'Water level high tha.'], 'answers': [('🌊 High water current se loose oar boat se slide karke away ho sakti thi despite rope intact', True), ('🧙 Boat ne oar khud chhupa di', False), ('🪢 Rope ne oar ko underwater teleport kiya', False)], 'difficulty': 'hard'}, {'title': 'Concert Ka Silent Microphone', 'clues': ['Main mic muted tha.', 'Audience ne speech clearly suni.', 'Backup mic powered tha.', 'Speaker feed active tha.'], 'answers': [('📢 Audience ne lip-reading se sound suna', False), ('🎤 Speech backup microphone se routed thi; main mic mute hona audio absence prove nahi karta', True), ('🔇 Muted mic ne secretly broadcast kiya', False)], 'difficulty': 'hard'}, {'title': 'Archive Box Ka Wrong Label', 'clues': ['Box label “1964” tha.', 'Paper inside 1971 dated tha.', 'Box seal original thi.', 'Archive shelf mixed decades accept karti thi.'], 'answers': [('🕰️ Paper 1964 se 1971 travel karke aaya', False), ('🪄 Archive labels future dates predict karte hain', False), ('📦 Box reused/relabelled ho sakta hai; seal paper ki date prove nahi karti', True)], 'difficulty': 'hard'}, {'title': 'Hotel Bell 3:17 Par', 'clues': ['Room bell 3:17 par ring hui.', 'Guest room mein nahi tha.', 'Hall sensor ne motion detect nahi kiya.', 'Service bell system shared tha.'], 'answers': [('🔔 Shared service circuit se remote bell trigger ho sakti hai without hallway motion', True), ('👻 Guest ki ghost presence detect hui', False), ('🚪 Guest invisible hoke room mein tha', False)], 'difficulty': 'hard'}, {'title': 'Chessboard Ka Impossible Move', 'clues': ['Game log mein knight E5 se F7 gaya.', 'Board photo mein knight D4 par tha.', 'Clock increment normal tha.', 'Move list mein one line overwritten thi.'], 'answers': [('⏱️ Chess clock ne illegal move legal bana diya', False), ('♟️ Overwritten move record board photo aur final log ko inconsistent banata hai; original move cannot be inferred as E5-F7', True), ('♞ Knight ne ek hi turn mein two moves kiye', False)], 'difficulty': 'hard'}, {'title': 'Post Office Ka Empty Parcel', 'clues': ['Parcel weight 0.8 kg tha.', 'Delivery ke waqt weight 0.1 kg tha.', 'Seal intact thi.', 'Packaging wet thi.'], 'answers': [('📦 Parcel ne contents teleport kiye', False), ('📬 Postman ne seal ke bina parcel khola', False), ('💧 Water loss/evaporation or leaked liquid can reduce weight while seal appears intact only if outer packaging allowed drainage', True)], 'difficulty': 'hard'}, {'title': 'Cinema Seat 9 Ka Dust Pattern', 'clues': ['Seat 9 dusty thi.', 'Armrest clean tha.', 'Ticket scanner seat 9 ko assigned tha.', 'Seat 8 par fresh popcorn tha.'], 'answers': [('🍿 Scanner assignment alone does not prove seating; clean armrest can indicate recent touch or cleaning, not identity', True), ('🎟️ Seat 9 ticket holder definitely sat there', False), ('👻 Invisible viewer ne popcorn khaya', False)], 'difficulty': 'hard'}, {'title': 'School Bell Before Sunrise', 'clues': ['Bell 6:00 par ring honi thi.', 'Sunrise 5:50 tha.', 'Bell log 5:58 dikhata hai.', 'Clock tower maintenance previous day hui thi.'], 'answers': [('🐦 Bird ne scheduled bell ring ki', False), ('🕰️ Clock mechanism calibration error se displayed time real time se shift ho sakta hai', True), ('🌅 Sunrise ne bell ko manually trigger kiya', False)], 'difficulty': 'hard'}, {'title': 'Green Envelope Ka Missing Stamp', 'clues': ['Envelope sealed tha.', 'Stamp missing tha.', 'Postmark present tha.', 'Letter paper dry tha despite rainy delivery.'], 'answers': [('🌧️ Rain ne stamp ko instantly dissolve kar diya', False), ('✉️ Envelope postmark ke bina travel nahi kar sakta', False), ('📮 Stamp removal postmark ke baad possible hai; missing stamp alone means letter unposted nahi', True)], 'difficulty': 'hard'}, {'title': 'Hotel Mirror Ka Delayed Fog', 'clues': ['Bathroom mirror clear tha.', 'Shower 10 min pehle use hui thi.', 'Mirror 10 min baad foggy hua.', 'Vent fan off tha.'], 'answers': [('💨 Residual humidity plus delayed cooling can cause later condensation on the mirror', True), ('👻 Mirror delayed ghost breath se fog hua', False), ('🧊 Mirror ke andar hidden freezer tha', False)], 'difficulty': 'hard'}, {'title': 'Warehouse Light Ka False Signal', 'clues': ['Warehouse light 3 times blink hui.', 'Electrical panel normal tha.', 'Forklift backup alarm 3 times beep hua.', 'Light sensor vibration-sensitive tha.'], 'answers': [('👤 Kisi person ne light switch three times press kiya', False), ('🔧 Forklift vibration ne sensitive light sensor ko trigger kiya', True), ('⚡ Panel ne secret Morse code send kiya', False)], 'difficulty': 'hard'}, {'title': 'Village Well Ka Fresh Rope', 'clues': ['Well rope new thi.', 'Well cover sealed tha.', 'Nearby cart repair hua tha.', 'Rope par grease marks the.'], 'answers': [('💧 Rope well ke andar se magically grow hui', False), ('🕵️ Kisi ne sealed cover ke through rope replace ki', False), ('🛠️ New rope likely cart/repair material se reused hui; well access prove nahi hota', True)], 'difficulty': 'hard'}, {'title': 'Gallery Frame Ka Crooked Angle', 'clues': ['Frame 2 degrees tilted tha.', 'Wall hook stable tha.', 'Floor vibration low thi.', 'Adjacent frame also slightly tilted tha.'], 'answers': [('🏛️ Shared mounting or wall settling likely explains both similar tilts', True), ('🎨 Painting andar se move kar rahi thi', False), ('🌪️ Wind ne indoor frames tilt kiye', False)], 'difficulty': 'hard'}, {'title': 'Metro Gate Ka Double Entry', 'clues': ['Card A ne gate open kiya.', 'Same second Card B bhi logged hai.', 'Gate one-person sensor tha.', 'CCTV shows one person.'], 'answers': [('🎫 Gate ne two people ko one sensor se hide kiya', False), ('🚇 One card may have been registered by a separate system event while only one physical entry occurred', True), ('👥 CCTV person actually two people merged together', False)], 'difficulty': 'hard'}, {'title': 'The Silent Alarm Clock', 'clues': ['Alarm set 7:00 tha.', 'Clock 6:58 par ringing mili.', 'Phone alarm 7:00 par active tha.', 'Clock battery recently replaced thi.'], 'answers': [('📱 Phone ne clock ko 2 minutes early ring karaya', False), ('👻 Alarm ne future time detect kiya', False), ('⏰ Clock time may have been two minutes fast; phone schedule does not validate clock accuracy', True)], 'difficulty': 'hard'}, {'title': 'Harbor Crate Ka Sea Smell', 'clues': ['Crate sealed thi.', 'Inside strong sea smell tha.', 'Harbor 2 km away tha.', 'Crate wood porous tha.'], 'answers': [('🌊 Porous wood can retain sea odor from prior exposure; smell alone does not prove recent harbor contact', True), ('🐟 Crate ke andar invisible fish thi', False), ('🌬️ Sea smell sealed wood ke through instantly teleport hui', False)], 'difficulty': 'hard'}, {'title': 'The Missing Page At Noon', 'clues': ['Book 120 pages ka catalogued tha.', 'Physical copy 119 pages ki mili.', 'Binding original thi.', 'Page 60 ke baad numbering jump karti hai.'], 'answers': [('🪄 Page noon par invisible ho gaya', False), ('📚 A missing or unnumbered leaf can account for the count discrepancy; numbering jump supports a removed/misbound section', True), ('📖 Book ne ek page absorb kar liya', False)], 'difficulty': 'hard'}]
-
-
 def _ordered_answers(context, index):
     key=f"mb_mystery_order_{index}"
     order=context.user_data.get(key)
@@ -388,77 +77,146 @@ def _menu_keyboard(page):
     if nav: rows.append(nav)
     return InlineKeyboardMarkup(rows),page,total_pages
 
-async def _show(update,index,context):
-    mystery=MYSTERIES[index]
-    clue_text = "\n".join(f"• {c}" for c in mystery["clues"])
-    text=(f"🕵️ <b>{mystery['title']}</b>\n\n"
-          f"🔎 <b>Clues</b>\n{clue_text}\n\n"
-          "🧠 Ye clues ek hi story ko explain karni chahiye. "
-          "Har option partial answer dikh raha hai — correct theory hi complete picture banata hai.")
-    markup=_keyboard(index,context)
-    if update.callback_query: await update.callback_query.edit_message_text(text,parse_mode="HTML",reply_markup=markup)
-    elif update.effective_message: await update.effective_message.reply_text(text,parse_mode="HTML",reply_markup=markup)
+async def _show(update, index, context):
+    mystery = MYSTERIES[index]
+    clue_text = "\n".join(f"• {clue}" for clue in mystery["clues"])
+    text = (
+        f"🕵️ {mystery['title']}\n\n"
+        f"🔎 CLUES\n{clue_text}\n\n"
+        "🧠 Saare clues ko mila kar woh option choose karo jo sabse achha explanation deta hai."
+    )
+    keyboard = _keyboard(index, context)
+    if update.callback_query:
+        await update.callback_query.edit_message_text(text, reply_markup=keyboard)
+    elif update.effective_message:
+        await update.effective_message.reply_text(text, reply_markup=keyboard)
 
-async def _show_menu(update,page=0):
-    markup,page,total_pages=_menu_keyboard(page)
-    text=("🕵️ <b>MOODBLOOM MYSTERY ROOM</b>\n\n"
-          f"{len(MYSTERIES)} cases • clues first • answers shuffled\n"
-          "Har case mein answer position fixed nahi hai. Pattern pakdo, guess nahi.\n\n"
-          f"Page {page+1}/{total_pages}")
-    if update.callback_query: await update.callback_query.edit_message_text(text,parse_mode="HTML",reply_markup=markup)
-    elif update.effective_message: await update.effective_message.reply_text(text,parse_mode="HTML",reply_markup=markup)
 
-async def mystery_command(update,context):
-    index=random.randrange(len(MYSTERIES))
-    context.user_data["mb_mystery_index"]=index
-    # Fresh shuffle for a new attempt.
-    context.user_data[f"mb_mystery_order_{index}"]=random.sample(range(len(MYSTERIES[index]["answers"])),len(MYSTERIES[index]["answers"]))
-    await _show(update,index,context)
+async def _show_menu(update, page=0):
+    keyboard, page, total_pages = _menu_keyboard(page)
+    text = (
+        "🕵️ MOODBLOOM MYSTERY ROOM\n\n"
+        f"{len(MYSTERIES)} cases • clue-based deduction\n"
+        "Answer select karne ke baad poora answer dikhaya jayega.\n\n"
+        f"Page {page + 1}/{total_pages}"
+    )
+    if update.callback_query:
+        await update.callback_query.edit_message_text(text, reply_markup=keyboard)
+    elif update.effective_message:
+        await update.effective_message.reply_text(text, reply_markup=keyboard)
 
-async def handle_mystery_callback(update,context):
-    q=update.callback_query
-    if not q: return
-    data=(q.data or "").split("|")
-    if len(data)==2 and data[1] in {"start","new"}:
-        await q.answer(); return await mystery_command(update,context)
-    if len(data)==3 and data[1]=="menu":
-        await q.answer()
-        try: page=int(data[2])
-        except (TypeError,ValueError): page=0
-        return await _show_menu(update,page)
-    if len(data)==3 and data[1]=="open":
-        await q.answer()
-        try: index=int(data[2])
-        except (TypeError,ValueError): index=0
-        index=max(0,min(index,len(MYSTERIES)-1))
-        context.user_data["mb_mystery_index"]=index
-        context.user_data[f"mb_mystery_order_{index}"]=random.sample(range(len(MYSTERIES[index]["answers"])),len(MYSTERIES[index]["answers"]))
-        return await _show(update,index,context)
-    if len(data)!=4 or data[0]!="mb_mystery" or data[1]!="answer":
-        await q.answer("Mystery expire ho gaya.",show_alert=True); return
-    try: index=int(data[2]); display_pos=int(data[3])
-    except (TypeError,ValueError): await q.answer("Mystery expire ho gaya.",show_alert=True); return
-    if index<0 or index>=len(MYSTERIES): await q.answer("Case available nahi hai.",show_alert=True); return
-    if context.user_data.get("mb_mystery_index")!=index: await q.answer("Pehle current case kholo.",show_alert=True); return
-    order=_ordered_answers(context,index)
-    if display_pos<0 or display_pos>=len(order): await q.answer("Option expire ho gaya.",show_alert=True); return
-    original_pos=order[display_pos]
-    mystery=MYSTERIES[index]
-    chosen_text,correct=mystery["answers"][original_pos]
-    await q.answer("Case solve! 🔎" if correct else "Clue match nahi hua.")
-    if correct:
-        explanation="Tumhari theory diye gaye clues ke saath perfectly consistent hai."
-        text=(f"🕵️ <b>{mystery['title']}</b>\n\n"
-              "✨ <b>Case Solved</b>\n\n"
-              f"{explanation}\n\n"
-              f"🔎 Full theory: {chosen_text}")
+
+async def mystery_command(update, context):
+    if not MYSTERIES:
+        if update.effective_message:
+            await update.effective_message.reply_text("Abhi koi mystery available nahi hai.")
+        return
+    index = random.randrange(len(MYSTERIES))
+    context.user_data["mb_mystery_index"] = index
+    context.user_data[f"mb_mystery_order_{index}"] = random.sample(
+        range(len(MYSTERIES[index]["answers"])),
+        len(MYSTERIES[index]["answers"]),
+    )
+    await _show(update, index, context)
+
+
+async def handle_mystery_callback(update, context):
+    query = update.callback_query
+    if not query:
+        return
+    data = (query.data or "").split("|")
+
+    if len(data) == 2 and data[0] == "mb_mystery" and data[1] in {"start", "new"}:
+        await query.answer()
+        return await mystery_command(update, context)
+
+    if len(data) == 3 and data[0] == "mb_mystery" and data[1] == "menu":
+        await query.answer()
+        try:
+            page = int(data[2])
+        except (TypeError, ValueError):
+            page = 0
+        return await _show_menu(update, page)
+
+    if len(data) == 3 and data[0] == "mb_mystery" and data[1] == "open":
+        await query.answer()
+        try:
+            index = int(data[2])
+        except (TypeError, ValueError):
+            index = 0
+        index = max(0, min(index, len(MYSTERIES) - 1))
+        context.user_data["mb_mystery_index"] = index
+        context.user_data[f"mb_mystery_order_{index}"] = random.sample(
+            range(len(MYSTERIES[index]["answers"])),
+            len(MYSTERIES[index]["answers"]),
+        )
+        return await _show(update, index, context)
+
+    if len(data) != 4 or data[0] != "mb_mystery" or data[1] != "answer":
+        await query.answer("Mystery expire ho gayi. Nayi mystery kholo.", show_alert=True)
+        return
+    try:
+        index = int(data[2])
+        display_pos = int(data[3])
+    except (TypeError, ValueError):
+        await query.answer("Option expire ho gaya.", show_alert=True)
+        return
+    if index < 0 or index >= len(MYSTERIES):
+        await query.answer("Case available nahi hai.", show_alert=True)
+        return
+    if context.user_data.get("mb_mystery_index") != index:
+        await query.answer("Pehle current case kholo.", show_alert=True)
+        return
+
+    order = _ordered_answers(context, index)
+    if display_pos < 0 or display_pos >= len(order):
+        await query.answer("Option expire ho gaya.", show_alert=True)
+        return
+
+    original_pos = order[display_pos]
+    mystery = MYSTERIES[index]
+    chosen_text, is_correct = mystery["answers"][original_pos]
+    correct_text = next(
+        (label for label, correct in mystery["answers"] if correct),
+        "Correct answer is not configured.",
+    )
+    await query.answer("Case solved! 🔎" if is_correct else "Clue match nahi hua.")
+
+    if is_correct:
+        text = (
+            f"🕵️ {mystery['title']}\n\n"
+            "✨ CASE SOLVED!\n\n"
+            "✅ Tumhara answer clues ke saath match karta hai.\n\n"
+            f"🔎 COMPLETE ANSWER\n{correct_text}\n\n"
+            "Nice deduction! Agla case try karna ho to neeche button use karo."
+        )
     else:
-        correct_text = next(label for label, flag in mystery["answers"] if flag)
-        text=(f"🕵️ <b>{mystery['title']}</b>\n\n"
-              "🔎 Ye theory saare clues ko ek saath explain nahi karti.\n\n"
-              "💡 Re-check karke deeper logic dekho.\n\n"
-              f"🧩 Hidden answer: {mask_answer_text(correct_text)}")
-    await q.edit_message_text(text, parse_mode="HTML", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 New Mystery",callback_data="mb_mystery|new"),InlineKeyboardButton("📚 Browse",callback_data="mb_mystery|menu|0")]]))
+        text = (
+            f"🕵️ {mystery['title']}\n\n"
+            "❌ Ye option saare clues ko explain nahi karta.\n\n"
+            f"🫵 Tumhara answer:\n{chosen_text}\n\n"
+            f"✅ COMPLETE CORRECT ANSWER:\n{correct_text}\n\n"
+            "💡 Tip: Har clue ko answer ke saath individually match karke dekho."
+        )
+
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔄 Same case again", callback_data=f"mb_mystery|open|{index}")],
+        [
+            InlineKeyboardButton("🕵️ New mystery", callback_data="mb_mystery|new"),
+            InlineKeyboardButton("📚 Browse cases", callback_data="mb_mystery|menu|0"),
+        ],
+    ])
+    # Telegram message limit is 4096 chars. Full answer text is preserved;
+    # if an unusually long content entry exceeds the limit, split it safely.
+    if len(text) <= 4000:
+        await query.edit_message_text(text, reply_markup=keyboard)
+    else:
+        first = text[:3900]
+        rest = text[3900:]
+        await query.edit_message_text(first, reply_markup=keyboard)
+        await query.message.reply_text(rest)
+
 
 def register_mystery_handlers(application):
+    # bot.py registers the shared callback handler to avoid duplicate routing.
     return application

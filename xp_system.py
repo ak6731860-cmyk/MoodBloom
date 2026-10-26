@@ -901,10 +901,10 @@ def format_level_up(
     )
 
     return (
-        "🎉 <b>LEVEL UP!</b>\n\n"
+        "🎉 LEVEL UP!\n\n"
         f"🌸 You reached "
-        f"<b>Level {new_level}</b>\n"
-        f"✨ Title: <b>{title}</b>\n"
+        f"Level {new_level}\n"
+        f"✨ Title: {title}\n"
         f"💫 +{result.get('xp_added', 0)} XP"
     )
 
@@ -932,7 +932,7 @@ def format_profile(
 
         xp_line = (
             f"✨ {info['xp']} XP — "
-            f"<b>MAX LEVEL</b>"
+            f"MAX LEVEL"
         )
 
     else:
@@ -943,7 +943,7 @@ def format_profile(
         )
 
     return (
-        f"⭐ <b>Level {info['level']}</b> "
+        f"⭐ Level {info['level']} "
         f"— {info['title']}\n"
         f"{xp_line}\n"
         f"{bar} "
@@ -987,14 +987,14 @@ def format_detailed_profile(
         )
 
     return (
-        f"🌸 <b>MOODBLOOM PROFILE</b>\n\n"
-        f"⭐ Level: <b>{summary['level']}</b>\n"
-        f"🏷️ Title: <b>{summary['title']}</b>\n\n"
+        f"🌸 MOODBLOOM PROFILE\n\n"
+        f"⭐ Level: {summary['level']}\n"
+        f"🏷️ Title: {summary['title']}\n\n"
         f"{bar} {summary['progress']}%\n"
         f"✨ XP: "
-        f"<b>{summary['xp']}</b>\n"
+        f"{summary['xp']}\n"
         f"📈 Total earned: "
-        f"<b>{summary['total_xp_earned']}</b>\n\n"
+        f"{summary['total_xp_earned']}\n\n"
         f"☀️ Today: "
         f"{summary['xp_today']} XP\n"
         f"📅 This week: "
