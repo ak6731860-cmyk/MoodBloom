@@ -7892,7 +7892,10 @@ def main():
 
     application.add_handler(
         TypeHandler(Update, maintenance_gate, block=True),
-        group=-2,
+        # Must run before feature handlers but in its own group. If this shares
+        # group=-2 with reminder_engine.handle_text, PTB runs only the first
+        # matching handler in that group and reminder setup text is swallowed.
+        group=-3,
     )
 
     # ========================================================

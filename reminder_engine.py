@@ -500,13 +500,20 @@ def register_handlers(application: Application) -> None:
         group=-2,
     )
     if application.job_queue is not None:
-        for job in application.job_queue.get_jobs_by_name("moodbloom_custom_reminder_worker"):
-            job.schedule_removal()
-        application.job_queue.run_repeating(
-            dispatch_due_reminders,
-            interval=CHECK_INTERVAL_SECONDS,
-            first=5,
-            name="moodbloom_custom_reminder_worker",
-        )
+        try:
+            for job in application.job_queue.get_jobs_by_name("moodbloom_custom_reminder_worker"):
+                job.schedule_removal()
+            application.job_queue.run_repeating(
+                dispatch_due_reminders,
+                interval=CHECK_INTERVAL_SECONDS,
+                first=5,
+                name="moodbloom_custom_reminder_worker",
+            )
+            print(
+                "⏰ Custom reminder worker enabled "
+                f"(checks every {CHECK_INTERVAL_SECONDS} seconds)."
+            )
+        except Exception as exc:
+            print(f"❌ Could not start custom reminder worker: {exc}")
     else:
-        print("WARNING: JobQueue unavailable; install python-telegram-bot[job-queue]. Custom reminders won't auto-send.")
+        print("❌ JobQueue unavailable; install python-telegram-bot[job-queue]==22.8. Reminders cannot auto-send until the dependency is installed and the bot is restarted.")
