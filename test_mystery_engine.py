@@ -19,3 +19,17 @@ def test_choices_hide_full_answer_but_still_have_correct_option():
     assert any(choice["correct"] for choice in choices)
     assert all(choice["display"] != choice["full"] for choice in choices)
     assert all(len(choice["display"]) < len(choice["full"]) for choice in choices)
+
+
+def test_mystery_choice_buttons_stay_readable_for_long_answers():
+    import mystery_engine
+
+    class FakeContext:
+        user_data = {}
+
+    for index, mystery in enumerate(mystery_engine.MYSTERIES):
+        keyboard = mystery_engine._keyboard(index, FakeContext())
+        for row in keyboard.inline_keyboard[:-1]:
+            assert len(row[0].text) <= 44
+        # The original source answer remains intact for the result message.
+        assert all(isinstance(answer[0], str) and answer[0] for answer in mystery["answers"])

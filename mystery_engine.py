@@ -60,8 +60,18 @@ def _keyboard(index, context):
     order=_ordered_answers(context,index)
     rows=[]
     for display_pos, original_pos in enumerate(order):
-        label, _=mystery["answers"][original_pos]
-        rows.append([InlineKeyboardButton(label,callback_data=f"mb_mystery|answer|{index}|{display_pos}")])
+        label, _ = mystery["answers"][original_pos]
+        # Long labels are clipped by some Telegram clients. Keep the choice readable
+        # while the full selected/correct answer is always shown in the result text.
+        short_label = str(label).strip()
+        if len(short_label) > 44:
+            short_label = short_label[:41].rstrip() + "…"
+        rows.append([
+            InlineKeyboardButton(
+                short_label,
+                callback_data=f"mb_mystery|answer|{index}|{display_pos}",
+            )
+        ])
     rows.append([InlineKeyboardButton("🔄 New Mystery",callback_data="mb_mystery|new"),InlineKeyboardButton("📚 Browse",callback_data="mb_mystery|menu|0")])
     return InlineKeyboardMarkup(rows)
 
@@ -206,15 +216,31 @@ async def handle_mystery_callback(update, context):
             InlineKeyboardButton("📚 Browse cases", callback_data="mb_mystery|menu|0"),
         ],
     ])
-    # Telegram message limit is 4096 chars. Full answer text is preserved;
-    # if an unusually long content entry exceeds the limit, split it safely.
-    if len(text) <= 4000:
-        await query.edit_message_text(text, reply_markup=keyboard)
-    else:
-        first = text[:3900]
-        rest = text[3900:]
-        await query.edit_message_text(first, reply_markup=keyboard)
-        await query.message.reply_text(rest)
+    # Telegram text limit is 4096 characters. Split at line boundaries so a
+    # long mystery explanation is never cut mid-word, and keep controls on the
+    # final chunk so users can continue after reading the complete answer.
+    chunks = []
+    remaining = text.strip()
+    while len(remaining) > 3900:
+        cut = remaining.rfind("\n", 0, 3900)
+        if cut < 1800:
+            cut = remaining.rfind(" ", 0, 3900)
+        if cut < 1:
+            cut = 3900
+        chunks.append(remaining[:cut].rstrip())
+        remaining = remaining[cut:].lstrip()
+    chunks.append(remaining)
+
+    await query.edit_message_text(
+        chunks[0],
+        reply_markup=keyboard if len(chunks) == 1 else None,
+    )
+    for chunk_index, chunk in enumerate(chunks[1:], start=1):
+        is_last = chunk_index == len(chunks) - 1
+        await query.message.reply_text(
+            chunk,
+            reply_markup=keyboard if is_last else None,
+        )
 
 
 def register_mystery_handlers(application):

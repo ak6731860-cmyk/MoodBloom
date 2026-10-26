@@ -6,10 +6,8 @@ from text_utils import bold
 
 load_dotenv()
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-
-if not BOT_TOKEN:
-    raise RuntimeError("BOT_TOKEN missing in .env")
+BOT_TOKEN = (os.getenv("BOT_TOKEN") or "").strip()
+# Keep imports testable without secrets. bot.py validates the token at startup.
 
 TIMEZONE = ZoneInfo("Asia/Kolkata")
 
@@ -17,7 +15,14 @@ DATA_FILE = "data/history.json"
 
 BOT_NAME = "MoodBloom"
 
-VERSION = "4.2 Premium Reminder Edition"
+VERSION = "4.4 Owner & Privacy Edition"
+
+# Telegram numeric user ID allowed to use owner-only commands.
+# Set OWNER_ID in .env; leave empty to disable owner commands.
+try:
+    OWNER_ID = int((os.getenv("OWNER_ID") or "0").strip() or "0")
+except (TypeError, ValueError):
+    OWNER_ID = 0
 
 
 

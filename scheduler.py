@@ -20,6 +20,7 @@ from telegram.ext import ContextTypes
 
 import config
 import database
+import group_data
 import morning_wishes
 import notifications
 import backup
@@ -953,9 +954,48 @@ async def send_birthday_notifications(
                 error,
             )
 
+    # --------------------------------------------------------
+    # Group birthdays: announce only inside the group whose
+    # own birthday registry contains the member. Never fan out
+    # a group's birthday into unrelated groups or private chats.
+    # --------------------------------------------------------
+    group_success = 0
+    try:
+        saved_groups = group_data.load_groups()
+        registered_groups = database.get_all_registered_groups(active_only=True)
+        group_ids = {str(key) for key in saved_groups.keys()}
+        group_ids.update(
+            str(item.get("chat_id")) for item in registered_groups
+            if item.get("chat_id")
+        )
+        for group_id in group_ids:
+            try:
+                todays = birthdays.get_group_today_birthdays(group_id)
+                if not todays:
+                    continue
+                names = [birthdays.get_display_name(item) for item in todays]
+                group_name = saved_groups.get(group_id, {}).get("name", "this group")
+                if len(names) == 1:
+                    announcement = (
+                        f"🎂🎉 Today is {names[0]}'s birthday!\n\n"
+                        f"Everyone at {group_name}, wish them a wonderful day! 🌸💖"
+                    )
+                else:
+                    announcement = (
+                        "🎂🎉 Today's birthdays in this group:\n\n"
+                        + "\n".join(f"• {name}" for name in names)
+                        + "\n\nLet's wish them a wonderful day! 🌸💖"
+                    )
+                if await _send_message(context, group_id, announcement):
+                    group_success += 1
+            except Exception as error:
+                print(f"🎂 Group birthday notification error ({group_id}): {error}")
+    except Exception as error:
+        print(f"🎂 Group birthday registry error: {error}")
+
     print(
         "🎂 Birthday notifications completed | "
-        f"Sent: {success} | Skipped: {skipped}"
+        f"Personal sent: {success} | Group announcements: {group_success} | Skipped: {skipped}"
     )
 
 

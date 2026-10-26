@@ -46,15 +46,15 @@ def start_keyboard():
 
 
 def home_keyboard():
+    """Compact personal dashboard: one clear home for each core feature."""
     return markup([
-        [button("😊 Mood", "menu_mood"), button("🌤️ Today", "menu_today")],
-        [button("🌸 Bloom", "v4_bloom"), button("👤 Profile", "menu_profile")],
-        [button("🔥 Streak", "menu_streak"), button("🧠 Insights", "menu_insights")],
-        [button("👥 Group", "menu_group"), button("🎂 Birthday", "v4_birthdays")],
-        [button("⏰ Reminder", "menu_reminder"), button("⚙️ Settings", "menu_settings")],
-        [button("❓ Help", "menu_help")],
+        [button("💗 Check in", "menu_mood"), button("🌤️ Today", "menu_today")],
+        [button("🌸 Bloom Journey", "v4_bloom"), button("👤 My Profile", "menu_profile")],
+        [button("📊 My Charts", "menu_chart"), button("🧠 Insights", "menu_insights")],
+        [button("🔥 Streak", "menu_streak"), button("🎂 Birthday", "v4_birthdays")],
+        [button("⏰ Reminder Studio", "menu_reminder"), button("⚙️ Settings", "menu_settings")],
+        [button("👥 Group Edition", "menu_group"), button("❓ Help Center", "menu_help")],
     ])
-
 
 # ============================================================
 # BLOOM DASHBOARD
@@ -243,7 +243,7 @@ def reminder_keyboard():
             button("✏️ Custom", "remind_custom"),
         ],
         [
-            button("❌ Disable", "remind_cancel"),
+            button("🔕 Disable daily", "remind_cancel"),
         ],
         [
             button("🏠 Home", "home"),
@@ -771,71 +771,27 @@ def study_keyboard(active=False):
 # ============================================================
 
 def notification_settings_keyboard(settings):
+    """Premium notification controls; Reminder Studio is the single reminder hub."""
     def toggle_label(label, key):
-        state = "🟢" if settings.get(key) else "🔴"
-        return f"{label} {state}"
-
-    global_state = (
-        "🟢 ON" if settings.get("enabled", True) else "🔴 OFF"
-    )
+        state = "🟢 ON" if settings.get(key, True) else "⚪ OFF"
+        return f"{label}: {state}"
 
     quiet = settings.get("quiet_hours", {}) or {}
-    quiet_state = (
-        "🔕 ON" if quiet.get("enabled") else "🔔 OFF"
-    )
+    quiet_state = "🔕 ON" if quiet.get("enabled") else "🔔 OFF"
+    global_state = "🟢 ON" if settings.get("enabled", True) else "⚪ OFF"
 
     return markup([
-        [
-            button(
-                f"🔔 All Notifications: {global_state}",
-                "notif_toggle_enabled",
-            ),
-        ],
-        [
-            button(
-                toggle_label("🌅 Morning", "morning"),
-                "notif_toggle_morning",
-            ),
-            button(
-                toggle_label("💭 Mood", "mood_check"),
-                "notif_toggle_mood_check",
-            ),
-        ],
-        [
-            button(
-                toggle_label("🎯 Goals", "daily_goals"),
-                "notif_toggle_daily_goals",
-            ),
-            button(
-                toggle_label("🎁 Reward", "daily_reward"),
-                "notif_toggle_daily_reward",
-            ),
-        ],
-        [
-            button(
-                toggle_label("🎂 Birthday", "birthday"),
-                "notif_toggle_birthday",
-            ),
-            button(
-                toggle_label("📚 Study", "study"),
-                "notif_toggle_study",
-            ),
-        ],
-        [
-            button(
-                f"🔕 Quiet Hours: {quiet_state}",
-                "notif_quiet_menu",
-            ),
-        ],
-        [
-            button("📝 Custom Reminders", "notif_reminders"),
-            button("📊 Stats", "notif_stats"),
-        ],
-        [
-            button("🌸 Bloom", "v4_bloom"),
-        ],
+        [button(f"🔔 All notifications: {global_state}", "notif_toggle_enabled")],
+        [button(toggle_label("🌅 Morning", "morning"), "notif_toggle_morning"),
+         button(toggle_label("💭 Mood check", "mood_check"), "notif_toggle_mood_check")],
+        [button(toggle_label("🎯 Daily goals", "daily_goals"), "notif_toggle_daily_goals"),
+         button(toggle_label("🎁 Daily reward", "daily_reward"), "notif_toggle_daily_reward")],
+        [button(toggle_label("🎂 Birthday", "birthday"), "notif_toggle_birthday"),
+         button(toggle_label("📚 Study", "study"), "notif_toggle_study")],
+        [button(f"🌙 Quiet hours: {quiet_state}", "notif_quiet_menu")],
+        [button("⏰ Open Reminder Studio", "menu_reminder"), button("📊 Notification stats", "notif_stats")],
+        [button("🌸 Bloom Home", "v4_bloom")],
     ])
-
 
 def quiet_hours_keyboard(settings):
     quiet = settings.get("quiet_hours", {}) or {}
@@ -897,41 +853,17 @@ def custom_reminder_view_keyboard(reminder_id):
 # ============================================================
 
 def group_keyboard():
+    """Group-only dashboard with a clear split between activity and admin tools."""
     return markup([
-        [
-            button("😊 Mood", "group_mood"),
-            button("📊 Report", "group_report"),
-        ],
-        [
-            button("🏆 Rank", "group_leaderboard"),
-            button("🔥 Streak", "group_streak"),
-        ],
-        [
-            button("📈 Activity", "group_activity"),
-            button("🎮 Fun", "group_games"),
-        ],
-        [
-            button("✨ Question", "group_question"),
-        ],
-        [
-            button("📖 Story", "mb_story|start"),
-            button("🕵️ Mystery", "mb_mystery|start"),
-        ],
-        [
-            button("⏰ Reminder Studio", "rem2|menu|group"),
-            button("🛡️ Admin", "group_admin"),
-        ],
-        [
-            button("👋 Welcome", "group_welcome"),
-        ],
-        [
-            button("❓ Help", "group_help"),
-        ],
-        [
-            button("🏠 Home", "home"),
-        ],
+        [button("😊 Group Mood", "group_mood"), button("📊 Group Report", "group_report")],
+        [button("📈 Group Chart", "group_chart"), button("🏆 Leaderboard", "group_leaderboard")],
+        [button("🔥 Group Streak", "group_streak"), button("🎮 Games", "group_games")],
+        [button("💬 Daily Question", "group_question"), button("📖 Stories", "mb_story|start")],
+        [button("🕵️ Mystery", "mb_mystery|start"), button("📈 Activity", "group_activity")],
+        [button("⏰ Group Reminder Studio", "rem2|menu|group")],
+        [button("🛡️ Admin Tools", "group_admin"), button("👋 Welcome", "group_welcome")],
+        [button("❓ Group Help", "group_help"), button("🏠 Personal Home", "home")],
     ])
-
 
 # ============================================================
 # GROUP MOOD
@@ -1177,29 +1109,12 @@ def group_streak_keyboard():
 
 def settings_keyboard():
     return markup([
-        [
-            button("🔔 Notifications", "v4_notifications"),
-        ],
-        [
-            button("⏰ Reminders", "menu_reminder"),
-        ],
-        [
-            button("🎂 Birthday", "v4_birthdays"),
-        ],
-        [
-            button("🎯 Goals", "v4_goals"),
-        ],
-        [
-            button("🌐 Timezone", "settings_timezone"),
-        ],
-        [
-            button("🔄 Reset", "settings_reset"),
-        ],
-        [
-            button("🏠 Home", "home"),
-        ],
+        [button("🔔 Notifications", "v4_notifications"), button("⏰ Reminder Studio", "menu_reminder")],
+        [button("🎂 Birthday", "v4_birthdays"), button("🎯 Daily Goals", "v4_goals")],
+        [button("🌐 Timezone (IST)", "settings_timezone")],
+        [button("🧹 Clear Mood History", "settings_reset")],
+        [button("🏠 Back to Home", "home")],
     ])
-
 
 # ============================================================
 # V4 SETTINGS

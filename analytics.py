@@ -1608,540 +1608,131 @@ def group_smart_summary(
 # ============================================================
 
 def create_mood_chart(history):
-    """
-    Creates overall mood distribution chart.
-    Returns BytesIO PNG or None.
-    """
-
+    """Create a polished personal mood distribution chart (PNG BytesIO)."""
     import matplotlib
-
     matplotlib.use("Agg")
-
     import matplotlib.pyplot as plt
-
     from io import BytesIO
 
-    distribution = mood_distribution(
-        history
-    )
-
+    distribution = mood_distribution(history or [])
     if not distribution:
         return None
 
-    order = [
-        "happy",
-        "sad",
-        "angry",
-        "tired",
-        "loved",
-        "okay"
-    ]
+    palette = {
+        "happy": "#F4B942",
+        "sad": "#6C8EBF",
+        "angry": "#E76F51",
+        "tired": "#9B8AC4",
+        "loved": "#E78AB6",
+        "okay": "#72B7A1",
+    }
+    items = []
+    for mood, stats in distribution.items():
+        info = moods.get_mood_info(mood)
+        items.append((
+            str(mood),
+            f"{info.get('emoji', '🌸')} {info.get('name', str(mood).title())}",
+            int(stats.get("count", 0)),
+            palette.get(mood, "#8D99AE"),
+        ))
+    items.sort(key=lambda item: item[2])
+    labels = [item[1] for item in items]
+    values = [item[2] for item in items]
+    colors = [item[3] for item in items]
+    total = sum(values)
 
-    labels = []
-
-    values = []
-
-    for mood in order:
-
-        if mood in distribution:
-
-            info = moods.get_mood_info(
-                mood
-            )
-
-            label = (
-                f"{info.get('emoji', '🌸')} "
-                f"{info.get('name', mood.title())}"
-            )
-
-            labels.append(label)
-
-            values.append(
-                distribution[mood]["count"]
-            )
-
-    # Handle custom/unknown moods
-    for mood in distribution:
-
-        if mood not in order:
-
-            labels.append(
-                str(mood).title()
-            )
-
-            values.append(
-                distribution[mood]["count"]
-            )
-
-    fig, ax = plt.subplots(
-        figsize=(8, 5)
-    )
-
-    ax.bar(
-        labels,
-        values
-    )
-
-    ax.set_title(
-        "MoodBloom - Mood Distribution"
-    )
-
-    ax.set_ylabel(
-        "Check-ins"
-    )
-
-    ax.tick_params(
-        axis="x",
-        rotation=25
-    )
-
-    fig.tight_layout()
+    fig, ax = plt.subplots(figsize=(9.2, max(4.8, 0.62 * len(items) + 1.7)), dpi=150)
+    fig.patch.set_facecolor("#FFF9FC")
+    ax.set_facecolor("#FFF9FC")
+    bars = ax.barh(labels, values, color=colors, height=0.64, edgecolor="white", linewidth=1.2)
+    ax.set_title("Your Mood Garden", loc="left", fontsize=18, fontweight="bold", color="#392B3D", pad=18)
+    ax.set_xlabel("Check-ins", color="#6F6572", labelpad=10)
+    ax.grid(axis="x", linestyle="--", linewidth=0.7, alpha=0.25)
+    ax.set_axisbelow(True)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    ax.spines["left"].set_visible(False)
+    ax.spines["bottom"].set_color("#E9DDE7")
+    ax.tick_params(axis="y", length=0, labelsize=10, colors="#4C4050")
+    ax.tick_params(axis="x", colors="#6F6572")
+    max_value = max(values) if values else 1
+    ax.set_xlim(0, max_value * 1.28 + 0.5)
+    for bar, value in zip(bars, values):
+        percent = round(value / total * 100) if total else 0
+        ax.text(value + max_value * 0.025, bar.get_y() + bar.get_height()/2,
+                f"{value}  ·  {percent}%", va="center", fontsize=9, color="#4C4050")
+    fig.text(0.99, 0.015, f"{total} total check-ins", ha="right", fontsize=9, color="#7B6D7D")
+    fig.tight_layout(rect=(0.02, 0.04, 0.99, 0.98))
 
     buffer = BytesIO()
-
-    fig.savefig(
-        buffer,
-        format="png",
-        dpi=150,
-        bbox_inches="tight"
-    )
-
+    fig.savefig(buffer, format="png", dpi=180, bbox_inches="tight", facecolor=fig.get_facecolor())
     plt.close(fig)
-
     buffer.seek(0)
-
+    buffer.name = "moodbloom_personal_mood_garden.png"
     return buffer
-
 
 # ============================================================
 # WEEKLY MOOD CHART
 # ============================================================
 
 def create_weekly_mood_chart(history):
-    """
-    Creates a 7-day mood activity chart.
-    Returns BytesIO PNG or None.
-    """
-
+    """Create a premium 7-day personal mood activity chart (PNG BytesIO)."""
     import matplotlib
-
     matplotlib.use("Agg")
-
     import matplotlib.pyplot as plt
-
     from io import BytesIO
 
     today = _now().date()
-
-    dates = [
-
-        today - timedelta(days=i)
-
-        for i in range(
-            6,
-            -1,
-            -1
-        )
-    ]
-
-    order = [
-        "happy",
-        "sad",
-        "angry",
-        "tired",
-        "loved",
-        "okay"
-    ]
-
-    counts_by_mood = {
-
-        mood: [0] * 7
-
-        for mood in order
+    dates = [today - timedelta(days=i) for i in range(6, -1, -1)]
+    order = ["happy", "loved", "okay", "tired", "sad", "angry"]
+    palette = {
+        "happy": "#F4B942", "loved": "#E78AB6", "okay": "#72B7A1",
+        "tired": "#9B8AC4", "sad": "#6C8EBF", "angry": "#E76F51",
     }
-
+    counts = {mood: [0] * 7 for mood in order}
     for entry in history or []:
-
         if not isinstance(entry, dict):
             continue
+        entry_date = get_entry_date(entry)
+        mood = entry.get("mood")
+        if entry_date in dates and mood in counts:
+            counts[mood][dates.index(entry_date)] += 1
 
-        entry_date = get_entry_date(
-            entry
-        )
-
-        mood = entry.get(
-            "mood"
-        )
-
-        if (
-            entry_date in dates
-            and mood in counts_by_mood
-        ):
-
-            index = dates.index(
-                entry_date
-            )
-
-            counts_by_mood[
-                mood
-            ][index] += 1
-
-    total_activity = sum(
-
-        sum(values)
-
-        for values
-        in counts_by_mood.values()
-    )
-
-    if total_activity == 0:
+    total = sum(sum(values) for values in counts.values())
+    if total == 0:
         return None
 
-    labels = [
-
-        date.strftime(
-            "%d %b"
-        )
-
-        for date in dates
-    ]
-
-    fig, ax = plt.subplots(
-        figsize=(9, 5)
-    )
-
+    labels = [date.strftime("%a\n%d %b") for date in dates]
+    fig, ax = plt.subplots(figsize=(10, 5.6), dpi=150)
+    fig.patch.set_facecolor("#FFF9FC")
+    ax.set_facecolor("#FFF9FC")
     bottom = [0] * 7
-
     for mood in order:
-
-        values = counts_by_mood[
-            mood
-        ]
-
-        if any(values):
-
-            info = moods.get_mood_info(
-                mood
-            )
-
-            label = info.get(
-                "name",
-                mood.title()
-            )
-
-            ax.bar(
-                labels,
-                values,
-                bottom=bottom,
-                label=label
-            )
-
-            bottom = [
-
-                bottom[i] + values[i]
-
-                for i in range(7)
-            ]
-
-    ax.set_title(
-        "MoodBloom - Last 7 Days"
-    )
-
-    ax.set_ylabel(
-        "Check-ins"
-    )
-
-    ax.set_xlabel(
-        "Date"
-    )
-
-    ax.legend()
-
-    fig.tight_layout()
-
-    buffer = BytesIO()
-
-    fig.savefig(
-        buffer,
-        format="png",
-        dpi=150,
-        bbox_inches="tight"
-    )
-
-    plt.close(fig)
-
-    buffer.seek(0)
-
-    return buffer
-
-
-# ============================================================
-# GROUP MOOD CHART
-# ============================================================
-
-def create_group_mood_chart(
-    group_history
-):
-    """
-    Creates overall group mood distribution chart.
-    Returns BytesIO PNG or None.
-    """
-
-    import matplotlib
-
-    matplotlib.use("Agg")
-
-    import matplotlib.pyplot as plt
-
-    from io import BytesIO
-
-    distribution = group_mood_distribution(
-        group_history
-    )
-
-    if not distribution:
-        return None
-
-    order = [
-        "happy",
-        "sad",
-        "angry",
-        "tired",
-        "loved",
-        "okay"
-    ]
-
-    labels = []
-
-    values = []
-
-    for mood in order:
-
-        if mood in distribution:
-
-            info = moods.get_mood_info(
-                mood
-            )
-
-            labels.append(
-                f"{info.get('emoji', '🌸')} "
-                f"{info.get('name', mood.title())}"
-            )
-
-            values.append(
-                distribution[mood]["count"]
-            )
-
-    for mood in distribution:
-
-        if mood not in order:
-
-            labels.append(
-                str(mood).title()
-            )
-
-            values.append(
-                distribution[mood]["count"]
-            )
-
-    fig, ax = plt.subplots(
-        figsize=(8, 5)
-    )
-
-    ax.bar(
-        labels,
-        values
-    )
-
-    ax.set_title(
-        "MoodBloom - Group Mood Report"
-    )
-
-    ax.set_ylabel(
-        "Check-ins"
-    )
-
-    ax.tick_params(
-        axis="x",
-        rotation=25
-    )
-
-    fig.tight_layout()
-
-    buffer = BytesIO()
-
-    fig.savefig(
-        buffer,
-        format="png",
-        dpi=150,
-        bbox_inches="tight"
-    )
-
-    plt.close(fig)
-
-    buffer.seek(0)
-
-    return buffer
-
-
-# ============================================================
-# GROUP WEEKLY CHART
-# ============================================================
-
-def create_group_weekly_chart(
-    group_history
-):
-    """
-    Creates a 7-day group mood activity chart.
-    """
-
-    import matplotlib
-
-    matplotlib.use("Agg")
-
-    import matplotlib.pyplot as plt
-
-    from io import BytesIO
-
-    today = _now().date()
-
-    dates = [
-
-        today - timedelta(days=i)
-
-        for i in range(
-            6,
-            -1,
-            -1
-        )
-    ]
-
-    order = [
-        "happy",
-        "sad",
-        "angry",
-        "tired",
-        "loved",
-        "okay"
-    ]
-
-    counts_by_mood = {
-
-        mood: [0] * 7
-
-        for mood in order
-    }
-
-    for entry in group_history or []:
-
-        if not isinstance(entry, dict):
+        values = counts[mood]
+        if not any(values):
             continue
+        info = moods.get_mood_info(mood)
+        label = f"{info.get('emoji', '🌸')} {info.get('name', mood.title())}"
+        ax.bar(labels, values, bottom=bottom, label=label, color=palette[mood], width=0.66,
+               edgecolor="#FFF9FC", linewidth=0.7)
+        bottom = [bottom[i] + values[i] for i in range(7)]
 
-        entry_date = get_entry_date(
-            entry
-        )
-
-        mood = entry.get(
-            "mood"
-        )
-
-        if (
-            entry_date in dates
-            and mood in counts_by_mood
-        ):
-
-            index = dates.index(
-                entry_date
-            )
-
-            counts_by_mood[
-                mood
-            ][index] += 1
-
-    total_activity = sum(
-
-        sum(values)
-
-        for values
-        in counts_by_mood.values()
-    )
-
-    if total_activity == 0:
-        return None
-
-    labels = [
-
-        date.strftime(
-            "%d %b"
-        )
-
-        for date in dates
-    ]
-
-    fig, ax = plt.subplots(
-        figsize=(9, 5)
-    )
-
-    bottom = [0] * 7
-
-    for mood in order:
-
-        values = counts_by_mood[
-            mood
-        ]
-
-        if any(values):
-
-            info = moods.get_mood_info(
-                mood
-            )
-
-            label = info.get(
-                "name",
-                mood.title()
-            )
-
-            ax.bar(
-                labels,
-                values,
-                bottom=bottom,
-                label=label
-            )
-
-            bottom = [
-
-                bottom[i] + values[i]
-
-                for i in range(7)
-            ]
-
-    ax.set_title(
-        "MoodBloom - Group Last 7 Days"
-    )
-
-    ax.set_ylabel(
-        "Check-ins"
-    )
-
-    ax.set_xlabel(
-        "Date"
-    )
-
-    ax.legend()
-
-    fig.tight_layout()
+    ax.set_title("Your Week in Bloom", loc="left", fontsize=18, fontweight="bold", color="#392B3D", pad=18)
+    ax.set_ylabel("Check-ins", color="#6F6572")
+    ax.grid(axis="y", linestyle="--", linewidth=0.7, alpha=0.25)
+    ax.set_axisbelow(True)
+    for spine in ("top", "right", "left"):
+        ax.spines[spine].set_visible(False)
+    ax.spines["bottom"].set_color("#E9DDE7")
+    ax.tick_params(axis="both", length=0, colors="#6F6572")
+    ax.legend(frameon=False, ncol=3, loc="upper left", bbox_to_anchor=(0, -0.14), fontsize=8)
+    fig.text(0.99, 0.015, f"{total} check-ins across 7 days", ha="right", fontsize=9, color="#7B6D7D")
+    fig.tight_layout(rect=(0.02, 0.07, 0.99, 0.98))
 
     buffer = BytesIO()
-
-    fig.savefig(
-        buffer,
-        format="png",
-        dpi=150,
-        bbox_inches="tight"
-    )
-
+    fig.savefig(buffer, format="png", dpi=180, bbox_inches="tight", facecolor=fig.get_facecolor())
     plt.close(fig)
-
     buffer.seek(0)
-
+    buffer.name = "moodbloom_personal_week.png"
     return buffer
+

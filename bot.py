@@ -9,6 +9,8 @@ from io import BytesIO
 from telegram import (
     Update,
     BotCommand,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
 )
 
 from telegram.ext import (
@@ -18,6 +20,7 @@ from telegram.ext import (
     ContextTypes,
     MessageHandler,
     TypeHandler,
+    ApplicationHandlerStop,
     filters,
 )
 from telegram.request import HTTPXRequest
@@ -59,14 +62,14 @@ ANIMATION_PATH = Path(__file__).resolve().parent / "assets" / "moodbloom.gif"
 # SAFE HELPERS
 # ============================================================
 
-async def safe_answer(query):
-    """
-    Safely answers a Telegram callback query.
-    """
-
+async def safe_answer(query, *args, **kwargs):
+    """Answer a Telegram callback once without letting stale callbacks crash a handler."""
     try:
-        await query.answer()
+        await query.answer(*args, **kwargs)
     except Exception:
+        # Some handlers acknowledge early to remove the spinner, then discover
+        # a validation error. A second alert may fail; the handler must continue
+        # and render the corresponding state/message instead of crashing.
         pass
 
 
@@ -277,6 +280,246 @@ async def show_v4_reward(
 # MOODBLOOM 4.0 — BIRTHDAY SYSTEM
 # ============================================================
 
+# ============================================================
+# OWNER-ONLY CONTROL CENTER & BROADCAST
+# ============================================================
+
+def _owner_settings_path():
+    return Path(config.DATA_FILE).resolve().parent / "owner_settings.json"
+
+
+def _load_owner_settings():
+    path = _owner_settings_path()
+    try:
+        if path.exists():
+            data = json.loads(path.read_text(encoding="utf-8"))
+            return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        pass
+    return {}
+
+
+def _save_owner_settings(settings):
+    path = _owner_settings_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp = path.with_suffix(".tmp")
+    temp.write_text(json.dumps(settings, ensure_ascii=False, indent=2), encoding="utf-8")
+    temp.replace(path)
+
+
+async def maintenance_gate(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """When paused, stop non-owner updates before any feature handler runs."""
+    if not _load_owner_settings().get("maintenance_mode", False):
+        return
+    if _is_owner(update):
+        return
+    message = getattr(update, "effective_message", None)
+    query = getattr(update, "callback_query", None)
+    should_notify = False
+    if query:
+        try:
+            await query.answer("🌸 MoodBloom is temporarily under maintenance.", show_alert=True)
+        except Exception:
+            pass
+    elif message:
+        incoming = (getattr(message, "text", "") or "").strip()
+        # Avoid replying to every ordinary group message during maintenance.
+        should_notify = bool(incoming.startswith("/"))
+        if should_notify:
+            try:
+                await message.reply_text("🛠️ MoodBloom is temporarily under maintenance. Please try again later. 🌸")
+            except Exception:
+                pass
+    raise ApplicationHandlerStop
+
+
+async def pausebot_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not _is_owner(update):
+        if update.effective_message:
+            await update.effective_message.reply_text(_owner_denied_text())
+        return
+    settings = _load_owner_settings()
+    settings["maintenance_mode"] = True
+    settings["updated_by"] = str(update.effective_user.id)
+    settings["updated_at"] = datetime.datetime.now().isoformat(timespec="seconds")
+    _save_owner_settings(settings)
+    await update.effective_message.reply_text(
+        "🛠️ Maintenance mode ON. Non-owner commands and buttons are paused.\n\n"
+        "Restart ki zaroorat nahi. Resume karne ke liye /resumebot use karo."
+    )
+
+
+async def resumebot_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not _is_owner(update):
+        if update.effective_message:
+            await update.effective_message.reply_text(_owner_denied_text())
+        return
+    settings = _load_owner_settings()
+    settings["maintenance_mode"] = False
+    settings["updated_by"] = str(update.effective_user.id)
+    settings["updated_at"] = datetime.datetime.now().isoformat(timespec="seconds")
+    _save_owner_settings(settings)
+    await update.effective_message.reply_text("✅ Maintenance mode OFF. MoodBloom is live again! 🌸")
+
+
+def _is_owner(update):
+    user = getattr(update, "effective_user", None)
+    owner_id = getattr(config, "OWNER_ID", 0)
+    return bool(user and owner_id and int(user.id) == int(owner_id))
+
+
+def _owner_denied_text():
+    return "🔒 Ye command sirf MoodBloom owner use kar sakta hai."
+
+
+async def myid_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    if not user or not update.effective_message:
+        return
+    await update.effective_message.reply_text(
+        f"🆔 Your Telegram numeric ID: {user.id}\n\n"
+        "Owner setup ke liye is number ko apne server ke .env mein OWNER_ID ke saamne likho."
+    )
+
+
+async def owner_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not _is_owner(update):
+        if update.effective_message:
+            await update.effective_message.reply_text(_owner_denied_text())
+        return
+    if not update.effective_chat or update.effective_chat.type != "private":
+        await update.effective_message.reply_text("🔐 Owner controls ko bot ke personal chat mein use karo.")
+        return
+    users = database.get_all_registered_users(active_only=True)
+    groups = database.get_all_registered_groups(active_only=True)
+    saved_groups = group_data.load_groups()
+    group_ids = {str(g.get("chat_id", "")) for g in groups if g.get("chat_id")}
+    group_ids.update(str(k) for k in saved_groups.keys())
+    text = (
+        "🛡️ MOODBLOOM OWNER CENTER\n\n"
+        f"👤 Active personal registrations: {len(users)}\n"
+        f"👥 Saved groups: {len(group_ids)}\n\n"
+        "📢 /cast Your message — broadcast with confirmation\n"
+        "📊 /ownerstats — current registry summary\n"
+        f"🛠️ Maintenance: {'ON' if _load_owner_settings().get('maintenance_mode') else 'OFF'}\n"
+        "⏸️ /pausebot — pause non-owner activity\n"
+        "▶️ /resumebot — resume bot\n\n"
+        "Broadcast sirf registered private chats aur saved groups ko jayega.\n"
+        "Telegram delivery restrictions apply."
+    )
+    markup = InlineKeyboardMarkup([[
+        InlineKeyboardButton("📊 Refresh stats", callback_data="owner_stats"),
+    ]])
+    await update.effective_message.reply_text(text, reply_markup=markup)
+
+
+async def owner_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not _is_owner(update):
+        if update.effective_message:
+            await update.effective_message.reply_text(_owner_denied_text())
+        return
+    users = database.get_all_registered_users(active_only=True)
+    groups = database.get_all_registered_groups(active_only=True)
+    saved_groups = group_data.load_groups()
+    group_ids = {str(g.get("chat_id", "")) for g in groups if g.get("chat_id")}
+    group_ids.update(str(k) for k in saved_groups.keys())
+    await update.effective_message.reply_text(
+        "📊 MOODBLOOM REGISTRY\n\n"
+        f"👤 Active personal chats registered: {len(users)}\n"
+        f"👥 Unique saved groups: {len(group_ids)}\n"
+        f"🎂 Birthday records: {len(birthdays.get_all_birthdays(include_private=True))}\n"
+        "ℹ️ Counts are registry records, not a live Telegram membership audit."
+    )
+
+
+async def cast_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not _is_owner(update):
+        if update.effective_message:
+            await update.effective_message.reply_text(_owner_denied_text())
+        return
+    if not update.effective_chat or update.effective_chat.type != "private":
+        await update.effective_message.reply_text("🔐 /cast ko bot ke personal chat mein use karo.")
+        return
+    message = " ".join(context.args).strip() if context.args else ""
+    if not message:
+        await update.effective_message.reply_text(
+            "📢 Broadcast preview ke liye message likho:\n\n"
+            "/cast 🌸 MoodBloom ki taraf se sabhi ko hello!\n\n"
+            "Text-only broadcast supported hai. Message send karne se pehle confirmation aayega."
+        )
+        return
+    if len(message) > 4000:
+        await update.effective_message.reply_text("❌ Message 4000 characters se chhota rakho.")
+        return
+    context.user_data["owner_cast_pending"] = message
+    preview = "📢 BROADCAST PREVIEW\n\n" + message + "\n\n⚠️ Ye registered personal chats aur saved groups ko bheja jayega. Continue?"
+    markup = InlineKeyboardMarkup([[
+        InlineKeyboardButton("✅ Confirm broadcast", callback_data="owner_cast_confirm"),
+        InlineKeyboardButton("❌ Cancel", callback_data="owner_cast_cancel"),
+    ]])
+    await update.effective_message.reply_text(preview, reply_markup=markup)
+
+
+async def owner_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    if not query:
+        return
+    await safe_answer(query)
+    if not _is_owner(update) or not update.effective_chat or update.effective_chat.type != "private":
+        await query.edit_message_text(_owner_denied_text())
+        return
+    if query.data == "owner_stats":
+        users = database.get_all_registered_users(active_only=True)
+        groups = database.get_all_registered_groups(active_only=True)
+        saved_groups = group_data.load_groups()
+        group_ids = {str(g.get("chat_id", "")) for g in groups if g.get("chat_id")}
+        group_ids.update(str(k) for k in saved_groups.keys())
+        await query.edit_message_text(
+            "📊 MOODBLOOM REGISTRY\n\n"
+            f"👤 Active personal registrations: {len(users)}\n"
+            f"👥 Unique saved groups: {len(group_ids)}\n"
+            f"🎂 Birthday records: {len(birthdays.get_all_birthdays(include_private=True))}"
+        )
+        return
+    if query.data == "owner_cast_cancel":
+        context.user_data.pop("owner_cast_pending", None)
+        await query.edit_message_text("❌ Broadcast cancelled. Koi message send nahi hua.")
+        return
+    if query.data != "owner_cast_confirm":
+        return
+    message = context.user_data.pop("owner_cast_pending", None)
+    if not message:
+        await query.edit_message_text("⚠️ Pending broadcast nahi mila. /cast se dobara preview banao.")
+        return
+    targets = set()
+    for user in database.get_all_registered_users(active_only=True):
+        uid = user.get("user_id")
+        if uid and str(uid) != str(config.OWNER_ID):
+            try: targets.add(int(uid))
+            except (TypeError, ValueError): pass
+    for group in database.get_all_registered_groups(active_only=True):
+        gid = group.get("chat_id")
+        if gid:
+            try: targets.add(int(gid))
+            except (TypeError, ValueError): pass
+    for gid in group_data.load_groups().keys():
+        try: targets.add(int(gid))
+        except (TypeError, ValueError): pass
+    sent = failed = 0
+    await query.edit_message_text(f"⏳ Broadcast shuru...\nTargets: {len(targets)}")
+    for chat_id in sorted(targets):
+        try:
+            await context.bot.send_message(chat_id=chat_id, text=message)
+            sent += 1
+        except Exception as error:
+            failed += 1
+            print(f"Owner broadcast failed for chat {chat_id}: {error}")
+    await context.bot.send_message(
+        chat_id=update.effective_user.id,
+        text=("✅ BROADCAST REPORT\n\n" f"📨 Delivered: {sent}\n" f"⚠️ Failed/skipped: {failed}\n" f"🎯 Targets: {len(targets)}")
+    )
+
+
 async def show_birthday_menu(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
@@ -306,24 +549,20 @@ async def show_birthday_menu(
             "🎂 You haven't added your birthday yet."
         )
 
-    next_birthday = birthdays.get_next_birthday()
-
-    if next_birthday:
-
-        name = birthdays.get_display_name(next_birthday)
-        days = next_birthday.get("days_until", 0)
-
+    # Personal birthday menu must never expose a global list or another
+    # user's birthday. Only show this user's own date/status here.
+    if record:
+        days = birthdays.days_until_birthday(
+            int(record.get("month", 0)), int(record.get("day", 0))
+        )
         if days == 0:
-            upcoming_line = f"🎉 Today is {name}'s birthday!"
+            upcoming_line = "🎉 Today is your birthday!"
         elif days == 1:
-            upcoming_line = f"🌸 Tomorrow is {name}'s birthday!"
+            upcoming_line = "🌸 Your birthday is tomorrow!"
         else:
-            upcoming_line = (
-                f"⏳ Next up: {name} in {days} days"
-            )
-
+            upcoming_line = f"⏳ Your birthday is in {days} days."
     else:
-        upcoming_line = "📅 No upcoming birthdays yet."
+        upcoming_line = "📅 Add your birthday to see your personal countdown."
 
     text = (
         "🎂 BIRTHDAYS\n"
@@ -557,12 +796,12 @@ async def handle_birthday_callback(
         result = birthdays.remove_birthday(user_id)
 
         if result.get("success"):
-            await query.answer(
+            await safe_answer(query, 
                 "🗑️ Birthday removed.",
                 show_alert=True,
             )
         else:
-            await query.answer(
+            await safe_answer(query, 
                 "You don't have a birthday saved.",
                 show_alert=True,
             )
@@ -576,21 +815,17 @@ async def handle_birthday_callback(
 
     if data == "birthday_upcoming":
 
-        upcoming = birthdays.get_upcoming_birthdays(
-            days=30
-        )
+        own = birthdays.get_birthday(user_id)
+        if own:
+            days = birthdays.days_until_birthday(int(own.get("month", 0)), int(own.get("day", 0)))
+            if days <= 30:
+                text = "📅 Your Birthday Countdown\n\n" + birthdays.format_birthday_record(own, include_year=False, include_age=False) + f"\n⏳ In {days} day(s)."
+            else:
+                text = "📅 Your Birthday Countdown\n\n" + f"Your birthday is in {days} days. 🌸"
+        else:
+            text = "📅 Your Birthday Countdown\n\nYou haven't added your birthday yet. Add it to see your personal countdown. 🎂"
 
-        text = birthdays.format_birthday_list(
-            upcoming,
-            title="📅 Upcoming Birthdays (30 days)",
-        )
-
-        await query.edit_message_text(
-            text,
-            
-            reply_markup=keyboards.birthday_manage_keyboard(),
-        )
-
+        await query.edit_message_text(text, reply_markup=keyboards.birthday_manage_keyboard())
         return
 
     # --------------------------------------------------------
@@ -599,19 +834,13 @@ async def handle_birthday_callback(
 
     if data == "birthday_today":
 
-        today_list = birthdays.get_today_birthdays()
+        own = birthdays.get_birthday(user_id)
+        if own and int(own.get("month", 0)) == birthdays._now().month and int(own.get("day", 0)) == birthdays._now().day:
+            text = "🎉 Today is your birthday!\n\nHappy Birthday from MoodBloom! 🌸🎂"
+        else:
+            text = "🎉 Your Birthday Today\n\nAaj tumhara birthday nahi hai." if own else "🎂 Tumne abhi apna birthday add nahi kiya hai."
 
-        text = birthdays.format_birthday_list(
-            today_list,
-            title="🎉 Today's Birthdays",
-        )
-
-        await query.edit_message_text(
-            text,
-            
-            reply_markup=keyboards.birthday_manage_keyboard(),
-        )
-
+        await query.edit_message_text(text, reply_markup=keyboards.birthday_manage_keyboard())
         return
 
     # --------------------------------------------------------
@@ -690,7 +919,7 @@ async def handle_birthday_callback(
 
         if not record:
 
-            await query.answer(
+            await safe_answer(query, 
                 "Add your birthday first.",
                 show_alert=True,
             )
@@ -708,7 +937,7 @@ async def handle_birthday_callback(
             reminder_enabled=new_state,
         )
 
-        await query.answer(
+        await safe_answer(query, 
             "🔔 Reminders "
             + ("enabled." if new_state else "disabled."),
             show_alert=True,
@@ -1099,7 +1328,7 @@ async def handle_study_callback(
         )
 
         if result.get("already_active"):
-            await query.answer(
+            await safe_answer(query, 
                 "📚 A session is already running.",
                 show_alert=True,
             )
@@ -1150,9 +1379,10 @@ async def handle_study_callback(
         _remove_study_jobs(context.application, user_id)
 
         if not result.get("success"):
-            await query.answer(
-                "This study session is no longer active.",
-                show_alert=True,
+            await edit_menu_message(
+                query,
+                "📚 Ye study session ab active nahi hai. Naya session start kar sakte ho.",
+                keyboards.study_keyboard(active=False),
             )
             return
 
@@ -1206,12 +1436,12 @@ async def handle_study_callback(
         _remove_study_jobs(context.application, user_id)
 
         if cancelled:
-            await query.answer(
+            await safe_answer(query, 
                 "🛑 Session cancelled.",
                 show_alert=True,
             )
         else:
-            await query.answer(
+            await safe_answer(query, 
                 "No active session to cancel.",
                 show_alert=True,
             )
@@ -1237,7 +1467,7 @@ async def handle_study_callback(
             pass
 
         if not result.get("success"):
-            await query.answer(
+            await safe_answer(query, 
                 "No active session to complete.",
                 show_alert=True,
             )
@@ -1513,7 +1743,7 @@ async def handle_notification_callback(
         )
 
         if not reminder:
-            await query.answer(
+            await safe_answer(query, 
                 "Reminder not found.",
                 show_alert=True,
             )
@@ -1553,7 +1783,7 @@ async def handle_notification_callback(
             reminder_id,
         )
 
-        await query.answer(
+        await safe_answer(query, 
             "🗑️ Reminder deleted."
             if deleted
             else "Couldn't delete that reminder.",
@@ -1809,7 +2039,7 @@ async def handle_v4_callback(
     if not query:
         return
 
-    await query.answer()
+    await safe_answer(query, )
 
     user = update.effective_user
 
@@ -2062,15 +2292,23 @@ async def handle_v4_callback(
         return
 
     # --------------------------------------------------------
+    # ALREADY-COMPLETED GOAL BUTTON
+    # --------------------------------------------------------
+
+    if data.startswith("v4_goal_done_"):
+        await edit_menu_message(
+            query,
+            "🌸 Ye goal pehle hi complete hai. Tumhari progress safe hai!",
+            keyboards.goals_keyboard(goals.get_daily_goals(user_id)),
+        )
+        return
+
+    # --------------------------------------------------------
     # COMPLETE GOAL
     # --------------------------------------------------------
 
     if data.startswith("v4_goal_"):
         goal_id = data[len("v4_goal_"):]
-
-        # Safety check for the already-completed button
-        if goal_id == "done":
-            return
 
         result = goals.complete_goal(
             user_id,
@@ -2078,16 +2316,18 @@ async def handle_v4_callback(
         )
 
         if result.get("already_completed"):
-            await query.answer(
-                "✅ Ye goal already complete hai!",
-                show_alert=True,
+            await edit_menu_message(
+                query,
+                "🌸 Ye goal pehle hi complete hai. Tumhari progress safe hai!",
+                keyboards.goals_keyboard(goals.get_daily_goals(user_id)),
             )
             return
 
         if not result.get("success"):
-            await query.answer(
-                "⚠️ Goal nahi mila.",
-                show_alert=True,
+            await edit_menu_message(
+                query,
+                "⚠️ Ye goal ab available nahi hai. Current goals refresh kar diye hain.",
+                keyboards.goals_keyboard(goals.get_daily_goals(user_id)),
             )
             return
 
@@ -2136,7 +2376,7 @@ async def handle_v4_callback(
         )
 
         if result.get("already_claimed"):
-            await query.answer(
+            await safe_answer(query, 
                 "🎁 Aaj ka reward already claim ho chuka hai!",
                 show_alert=True,
             )
@@ -2148,9 +2388,10 @@ async def handle_v4_callback(
             return
 
         if not result.get("success"):
-            await query.answer(
-                "⚠️ Reward claim nahi ho paya.",
-                show_alert=True,
+            await edit_menu_message(
+                query,
+                "⚠️ Reward abhi claim nahi ho paya. Thodi der baad dobara try karo.",
+                keyboards.reward_keyboard(claimed=False),
             )
             return
 
@@ -4117,16 +4358,18 @@ async def handle_reminder(
 
     if action == "remind_cancel":
 
-        context.user_data[
-            "waiting_for_reminder"
-        ] = False
+        context.user_data["waiting_for_reminder"] = False
+        try:
+            database.disable_user_reminder(user_id)
+        except Exception as error:
+            print("Daily reminder disable error:", error)
+        remove_existing_reminder_jobs(context.application, user_id)
 
         await edit_menu_message(
             query,
-            "❌ Reminder setup cancelled.",
+            "🔕 Daily mood reminder disabled. You can set it again anytime from Reminder Studio.",
             keyboards.back_keyboard(),
         )
-
         return
 
     if action == "remind_custom":
@@ -6187,47 +6430,48 @@ async def group_chart_callback(
 
     try:
 
+        import matplotlib
+        matplotlib.use("Agg")
         import matplotlib.pyplot as plt
 
-        labels = list(
-            distribution.keys()
-        )
+        mood_order = ["happy", "loved", "okay", "tired", "sad", "angry"]
+        palette = {
+            "happy": "#F4B942", "loved": "#E78AB6", "okay": "#72B7A1",
+            "tired": "#9B8AC4", "sad": "#6C8EBF", "angry": "#E76F51",
+        }
+        items = []
+        for mood, count in distribution.items():
+            info = moods.get_mood_info(mood)
+            items.append((mood, f"{info.get('emoji', '🌸')} {info.get('name', str(mood).title())}", int(count)))
+        items.sort(key=lambda item: (mood_order.index(item[0]) if item[0] in mood_order else len(mood_order), -item[2]))
+        labels = [item[1] for item in items]
+        values = [item[2] for item in items]
+        colors = [palette.get(item[0], "#8D99AE") for item in items]
+        total = sum(values)
 
-        values = list(
-            distribution.values()
-        )
-
-        fig, ax = plt.subplots(
-            figsize=(7, 4.5)
-        )
-
-        ax.bar(
-            labels,
-            values
-        )
-
-        ax.set_title(
-            f"{group.get('name', 'This Group')} — Mood Distribution"
-        )
-
-        ax.set_ylabel(
-            "Check-ins"
-        )
-
-        ax.tick_params(
-            axis="x",
-            rotation=25,
-        )
-
-        fig.tight_layout()
+        fig, ax = plt.subplots(figsize=(9.2, max(4.8, 0.62 * len(items) + 1.7)), dpi=150)
+        fig.patch.set_facecolor("#FFF9FC")
+        ax.set_facecolor("#FFF9FC")
+        bars = ax.barh(labels, values, color=colors, height=0.64, edgecolor="white", linewidth=1.2)
+        ax.set_title(f"{group.get('name', 'This Group')} · Mood Garden", loc="left", fontsize=17, fontweight="bold", color="#392B3D", pad=18)
+        ax.set_xlabel("Group check-ins", color="#6F6572", labelpad=10)
+        ax.grid(axis="x", linestyle="--", linewidth=0.7, alpha=0.25)
+        ax.set_axisbelow(True)
+        for spine in ("top", "right", "left"):
+            ax.spines[spine].set_visible(False)
+        ax.spines["bottom"].set_color("#E9DDE7")
+        ax.tick_params(axis="y", length=0, labelsize=10, colors="#4C4050")
+        ax.tick_params(axis="x", colors="#6F6572")
+        max_value = max(values) if values else 1
+        ax.set_xlim(0, max_value * 1.28 + 0.5)
+        for bar, value in zip(bars, values):
+            percent = round(value / total * 100) if total else 0
+            ax.text(value + max_value * 0.025, bar.get_y() + bar.get_height()/2,
+                    f"{value}  ·  {percent}%", va="center", fontsize=9, color="#4C4050")
+        fig.text(0.99, 0.015, f"{total} group mood check-ins", ha="right", fontsize=9, color="#7B6D7D")
+        fig.tight_layout(rect=(0.02, 0.04, 0.99, 0.98))
 
         image = BytesIO()
-
-        fig.savefig(
-            image,
-            format="png",
-            dpi=150,
-        )
 
         plt.close(fig)
 
@@ -6900,6 +7144,23 @@ async def group_reminder_callback(
     )
 
 
+async def group_help_command(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE,
+):
+    """Text command equivalent of the Group Help button."""
+    chat = update.effective_chat
+    if not chat or chat.type not in ("group", "supergroup"):
+        await update.effective_message.reply_text(
+            "👥 Group Help sirf group chat mein available hai. Group mein /grouphelp bhejo."
+        )
+        return
+    await update.effective_message.reply_text(
+        messages.group_help(),
+        reply_markup=keyboards.group_keyboard(),
+    )
+
+
 async def group_help_callback(
     update,
     context,
@@ -7319,8 +7580,14 @@ async def post_init(
         ),
         BotCommand(
             "birthday",
-            "Manage your birthday"
+            "Manage your birthday privately"
         ),
+        BotCommand("owner", "Owner-only control center"),
+        BotCommand("cast", "Owner-only broadcast"),
+        BotCommand("ownerstats", "Owner-only bot statistics"),
+        BotCommand("myid", "Show your Telegram numeric ID"),
+        BotCommand("pausebot", "Owner-only maintenance pause"),
+        BotCommand("resumebot", "Owner-only resume bot"),
         BotCommand(
             "groupbirthday",
             "Add birthday for this group"
@@ -7333,6 +7600,18 @@ async def post_init(
             "notifications",
             "Manage notification settings"
         ),
+        BotCommand("reminders", "Open Reminder Studio"),
+        BotCommand("story", "Read a MoodBloom story"),
+        BotCommand("mystery", "Solve a mystery case"),
+        BotCommand("grouphelp", "Group features and help"),
+        BotCommand("care", "Get a self-care suggestion"),
+        BotCommand("vibe", "Get a positive vibe"),
+        BotCommand("group", "Open the group dashboard"),
+        BotCommand("groupmood", "Group mood check-in"),
+        BotCommand("groupstory", "Open group stories"),
+        BotCommand("groupmystery", "Open group mystery"),
+        BotCommand("groupfun", "Open group games"),
+        BotCommand("groupquestion", "Ask a group question"),
         BotCommand(
             "mood",
             "Record your mood"
@@ -7531,6 +7810,9 @@ def main():
     Starts MoodBloom bot.
     """
 
+    if not config.BOT_TOKEN:
+        raise RuntimeError("BOT_TOKEN missing. Add BOT_TOKEN=... to your .env before starting MoodBloom.")
+
     print(
         f"🌸 Starting {config.BOT_NAME} "
         f"{config.VERSION}..."
@@ -7605,6 +7887,15 @@ def main():
     )
 
     # ========================================================
+    # OWNER MAINTENANCE GATE (must run before all feature handlers)
+    # ========================================================
+
+    application.add_handler(
+        TypeHandler(Update, maintenance_gate, block=True),
+        group=-2,
+    )
+
+    # ========================================================
     # AUTOMATIC ACTIVITY REGISTRATION
     # ========================================================
 
@@ -7628,6 +7919,13 @@ def main():
             )
         )
 
+    application.add_handler(CommandHandler("owner", owner_command))
+    application.add_handler(CommandHandler("cast", cast_command))
+    application.add_handler(CommandHandler("ownerstats", owner_stats_command))
+    application.add_handler(CommandHandler("myid", myid_command))
+    application.add_handler(CommandHandler("pausebot", pausebot_command))
+    application.add_handler(CommandHandler("resumebot", resumebot_command))
+
     # ========================================================
     # NEW MOODBLOOM ENGINES
     # ========================================================
@@ -7638,6 +7936,12 @@ def main():
     reward_engine.register_reward_handlers(application)
     group_engine.register_group_handlers(application)
     reminder_engine.register_handlers(application)
+
+    # Story and mystery engines expose callback routing separately; register
+    # their slash commands here as well so the command menu and buttons agree.
+    application.add_handler(CommandHandler("story", story_engine.story_command))
+    application.add_handler(CommandHandler("mystery", mystery_engine.mystery_command))
+    application.add_handler(CommandHandler("grouphelp", group_help_command))
 
     application.add_handler(
         CommandHandler("goals", show_v4_goals)
@@ -7760,27 +8064,6 @@ def main():
 
     application.add_handler(
         CommandHandler(
-            "quote",
-            quote
-        )
-    )
-
-    application.add_handler(
-        CommandHandler(
-            "motivate",
-            motivate
-        )
-    )
-
-    application.add_handler(
-        CommandHandler(
-            "random",
-            random_message
-        )
-    )
-
-    application.add_handler(
-        CommandHandler(
             "remind",
             remind
         )
@@ -7827,6 +8110,13 @@ def main():
 
     application.add_handler(
         CallbackQueryHandler(
+            owner_callback,
+            pattern=r"^owner_(?:stats|cast_confirm|cast_cancel)$",
+        )
+    )
+
+    application.add_handler(
+        CallbackQueryHandler(
             handle_reminder,
             pattern=r"^remind_",
         )
@@ -7869,7 +8159,7 @@ def main():
     application.add_handler(
         CallbackQueryHandler(
             handle_menu,
-            pattern=r"^(home|menu_(?!group$)|analytics_|help_|settings_|reset_cancel$)",
+            pattern=r"^(home|menu_(?!group$|reminder$)|analytics_|help_|settings_|reset_cancel$)",
         )
     )
 
